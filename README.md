@@ -114,7 +114,7 @@ pnpm dev                   # http://localhost:3000
 - [x] Role-based middleware `EnsureRole` (buyer, partner, admin)
 - [x] Policies: OrderPolicy, ProductPolicy, PartnerPolicy, PayoutBatchPolicy
 
-### Step 4 — Business Logic & API ⏳ (backend ~70%, frontend 0%)
+### Step 4 — Business Logic & API ✅
 - [x] Cart management (CartService + 4 endpoints)
 - [x] Checkout + snapshot pricing (CheckoutService + StockReservationService)
 - [x] Midtrans payment webhook (MidtransService + idempotency)
@@ -122,16 +122,42 @@ pnpm dev                   # http://localhost:3000
 - [x] Order management + state machine (OrderService)
 - [x] Image upload — Cloudinary (CloudinaryService)
 - [x] Events & Listeners (OrderPaid, OrderCompleted, OrderPaymentFailed)
-- [x] Console command: ExpireUnpaidOrders (scheduled)
-- [ ] Earnings & Payout system (cooling period 7d, batch generation, CreatePartnerEarnings listener)
-- [ ] Meilisearch integration (full-text product search)
-- [ ] Frontend — Next.js App Router (0% — hanya config files)
+- [x] Console commands: ExpireUnpaidOrders, MatureEarnings, AutoCompleteOrders (scheduled)
+- [x] Earnings & Payout system (cooling period 7d, batch generation, CreatePartnerEarnings listener)
+- [x] AI Copywriter (Google Gemini 2.0 Flash) — generate product copy for partner form
+- [x] AI Chat SSE (Google Gemini 2.0 Flash) — streaming chat assistant endpoint
 
-### Step 5 — Testing & Polish ⏳
-- [x] Semua 40 backend tests hijau (AuthTest, CheckoutServiceTest, StockReservationServiceTest, ProductServiceTest, PaymentWebhookTest, AuthServiceTest)
+### Step 5 — Backend Testing ✅
+- [x] 49 backend tests hijau (Auth, Checkout, StockReservation, ProductService, PaymentWebhook, Earnings, Payout)
+
+### Step 6 — Frontend Phase 1: Core & Catalog ✅
+- [x] Layout: Navbar, Footer, route groups `(marketing)`, `(auth)`, `(partner)`, `(admin)`
+- [x] Landing page — hero, featured products, sustainability strip
+- [x] Shop catalog — filter by category/price, sort
+- [x] Product detail page — gallery, add to cart
+- [x] `<Price cents={} />` component, Greeva design tokens
+
+### Step 7 — Frontend Phase 2: Cart, Checkout & Auth ✅
+- [x] Cart drawer (Zustand) — add, update, remove, guest merge
+- [x] Checkout page — alamat, Midtrans Snap popup
+- [x] Buyer order history + detail halaman
+- [x] Login & Register (Sanctum Bearer token, auth store Zustand)
+
+### Step 8 — Frontend Phase 3: Partner & Admin Dashboards ✅
+- [x] Partner dashboard — produk (CRUD + submit), earnings summary, payout history
+- [x] Admin panel — mitra, produk (approve/reject), pesanan (update status), payout (generate + mark paid)
+- [x] `useRoleGuard` hook — redirect unauthorized users
+- [x] `DashboardShell` + `Sidebar` dengan active state detection
+
+### Step 9 — AI Integration ✅
+- [x] AI Copywriter di form produk mitra — generate description, short_description, sustainability_notes, meta SEO
+- [x] Chat Widget floating — streaming SSE, typing indicator, mobile-friendly
+- [x] Provider: Google Gemini 2.0 Flash (free tier 1.500 req/hari)
+
+### Backlog
+- [ ] Meilisearch integration (full-text search, saat ini pakai filter DB)
 - [ ] Frontend tests (Vitest + Playwright E2E)
-- [ ] API documentation (OpenAPI/Swagger)
-- [ ] UI polish + accessibility audit
+- [ ] WhatsApp notifications (Fonnte — config sudah ada, implementasi belum)
 
 ---
 
