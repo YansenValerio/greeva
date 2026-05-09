@@ -128,7 +128,8 @@ pnpm dev                   # http://localhost:3000
 - [x] AI Chat SSE (Google Gemini 2.0 Flash) — streaming chat assistant endpoint
 
 ### Step 5 — Backend Testing ✅
-- [x] 49 backend tests hijau (Auth, Checkout, StockReservation, ProductService, PaymentWebhook, Earnings, Payout)
+- [x] 49 tests hijau — Auth, Checkout, StockReservation, ProductService, PaymentWebhook, Earnings, Payout
+- [x] Framework: Pest · Runner: `php artisan test`
 
 ### Step 6 — Frontend Phase 1: Core & Catalog ✅
 - [x] Layout: Navbar, Footer, route groups `(marketing)`, `(auth)`, `(partner)`, `(admin)`
@@ -154,9 +155,23 @@ pnpm dev                   # http://localhost:3000
 - [x] Chat Widget floating — streaming SSE, typing indicator, mobile-friendly
 - [x] Provider: Google Gemini 2.0 Flash (free tier 1.500 req/hari)
 
+### Step 10 — Meilisearch Integration ✅
+- [x] Laravel Scout + Meilisearch driver (laravel/scout ^11.1)
+- [x] Product model: `Searchable` trait, `toSearchableArray()`, `shouldBeSearchable()` (active only)
+- [x] Filterable: `status`, `category_id`, `partner_id`, `price` — filter langsung di index
+- [x] Sortable: `published_at`, `price`, `name`
+- [x] Hybrid strategy: Scout saat ada `search` param, Eloquent untuk browsing tanpa kata kunci
+- [x] Sync otomatis via queue (`after_commit: true`) saat produk disimpan/status berubah
+
+### Step 11 — Frontend Tests ✅
+- [x] **Unit (Vitest · 24 tests)** — `npm test`
+  - `cart.store`: addItem, updateItem, removeItem, fetch, clear, subtotal multi-item
+  - `checkout schema`: semua validasi field — nama, telepon, alamat, provinsi, kota, kode pos
+- [x] **E2E (Playwright · 8 scenarios)** — `npm run test:e2e` (butuh `npx playwright install chromium`)
+  - `checkout.spec`: auth guard, form validation, full flow (mock API + snap.pay → redirect order)
+  - `partner-product-submit.spec`: role guard, validasi, full submit (mock categories + API → redirect list)
+
 ### Backlog
-- [ ] Meilisearch integration (full-text search, saat ini pakai filter DB)
-- [ ] Frontend tests (Vitest + Playwright E2E)
 - [ ] WhatsApp notifications (Fonnte — config sudah ada, implementasi belum)
 
 ---
