@@ -128,7 +128,7 @@ pnpm dev                   # http://localhost:3000
 - [x] AI Chat SSE (Google Gemini 2.0 Flash) — streaming chat assistant endpoint
 
 ### Step 5 — Backend Testing ✅
-- [x] 49 tests hijau — Auth, Checkout, StockReservation, ProductService, PaymentWebhook, Earnings, Payout
+- [x] 58 tests hijau — Auth, Checkout, StockReservation, ProductService, PaymentWebhook, Earnings, Payout, WhatsApp
 - [x] Framework: Pest · Runner: `php artisan test`
 
 ### Step 6 — Frontend Phase 1: Core & Catalog ✅
@@ -171,8 +171,16 @@ pnpm dev                   # http://localhost:3000
   - `checkout.spec`: auth guard, form validation, full flow (mock API + snap.pay → redirect order)
   - `partner-product-submit.spec`: role guard, validasi, full submit (mock categories + API → redirect list)
 
+### Step 12 — WhatsApp Notifications ✅
+- [x] `WhatsAppService` — Fonnte API wrapper, phone normalization (0xxx → 628xxx), graceful failure (no throw)
+- [x] `SendOrderPaidNotification` — buyer (shipping_phone) + setiap partner yang item-nya ada di order
+- [x] `SendOrderCompletedNotification` — buyer (shipping_phone)
+- [x] `SendOrderPaymentFailedNotification` — buyer (shipping_phone)
+- [x] Semua listener queued (3 retries, 60s backoff) — notifikasi tidak memblokir request
+- [x] Aktivasi: isi `WHATSAPP_API_KEY` di `.env`
+
 ### Backlog
-- [ ] WhatsApp notifications (Fonnte — config sudah ada, implementasi belum)
+- [ ] _(kosong — semua fitur core selesai)_
 
 ---
 
