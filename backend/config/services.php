@@ -30,4 +30,9 @@ return [
         'model'   => env('GOOGLE_AI_MODEL', 'gemini-pro'),
     ],
 
+    'whatsapp' => [
+        'provider' => env('WHATSAPP_PROVIDER', 'fonnte'),
+        'api_key'  => env('WHATSAPP_API_KEY'),
+    ],
+
 ];
