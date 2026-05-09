@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --greeva-emerald: #006242;
+    --greeva-starbucks-green: #00754a;
+    --greeva-forest: #16a34a;
+    --greeva-forest-dark: #32462f;
+    --greeva-leaf: #4ade80;
+    --greeva-mint-light: #d1fae5;
+    --greeva-sand-warm: #f5f0e8;
+    --greeva-black: #1c1c1c;
+    --greeva-text-body: #212121;
+    --greeva-ocean-blue: #1d4ed8;
+    --greeva-white: #ffffff;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    color: var(--greeva-text-body);
+  }
+
+  body {
+    background-color: var(--greeva-white);
+    font-family: 'Inter', 'DM Sans', -apple-system, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--greeva-black);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

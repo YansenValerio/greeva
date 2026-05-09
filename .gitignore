@@ -1,0 +1,75 @@
+# ===========================
+# Node.js / Frontend
+# ===========================
+node_modules/
+.next/
+out/
+dist/
+build/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Env files
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+/coverage
+/playwright-report
+/test-results
+
+# ===========================
+# PHP / Laravel / Backend
+# ===========================
+vendor/
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/storage/logs/*.log
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/testing/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*.php
+
+# Composer
+backend/composer.lock
+
+# ===========================
+# OS / Editor
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ===========================
+# Logs & Misc
+# ===========================
+*.log
+*.cache
+.phpunit.result.cache
+.phpunit.cache/
+
+# Certificates
+*.pem
+*.key
+*.crt
