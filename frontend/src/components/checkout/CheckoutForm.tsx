@@ -2,7 +2,6 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { FormField } from '@/components/shared/FormField';
@@ -10,24 +9,7 @@ import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { checkout } from '@/lib/api/orders';
 import { useCartStore } from '@/stores/cart.store';
-
-const schema = z.object({
-  shipping_name: z.string().min(2, 'Nama penerima wajib diisi.').max(255),
-  shipping_phone: z
-    .string()
-    .regex(/^[0-9+\-\s]{8,20}$/, 'Nomor telepon tidak valid.'),
-  shipping_address: z.string().min(10, 'Alamat terlalu pendek.').max(1000),
-  shipping_province: z.string().min(1, 'Provinsi wajib diisi.'),
-  shipping_city: z.string().min(1, 'Kota/Kabupaten wajib diisi.'),
-  shipping_district: z.string().max(100).optional(),
-  shipping_postal_code: z
-    .string()
-    .length(5, 'Kode pos harus 5 digit angka.')
-    .regex(/^\d{5}$/, 'Kode pos harus berupa angka.'),
-  notes: z.string().max(500).optional(),
-});
-
-type FormData = z.infer<typeof schema>;
+import { checkoutSchema, type CheckoutFormData as FormData } from '@/lib/schemas/checkout';
 
 export function CheckoutForm() {
   const router = useRouter();
@@ -38,7 +20,7 @@ export function CheckoutForm() {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
+  } = useForm<FormData>({ resolver: zodResolver(checkoutSchema) });
 
   const onSubmit = async (values: FormData) => {
     try {

@@ -9,7 +9,8 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,md}\"",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -30,19 +31,23 @@
   "devDependencies": {
     "@playwright/test": "^1.40.0",
     "@tailwindcss/forms": "^0.5.0",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.0.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.0",
     "eslint": "^8.0.0",
     "eslint-config-next": "^14.2.0",
     "eslint-config-prettier": "^10.1.8",
+    "jsdom": "^29.1.1",
     "postcss": "^8.4.0",
     "prettier": "^3.0.0",
     "prettier-plugin-tailwindcss": "^0.5.0",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.0",
+    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^1.0.0"
   }
 }
