@@ -18,42 +18,81 @@ class ProductService
 
     public function listPublic(array $filters): LengthAwarePaginator
     {
+        $perPage = min((int) ($filters['per_page'] ?? 20), 100);
+        $search  = trim($filters['search'] ?? '');
+
+        if ($search !== '') {
+            return $this->searchViaMeilisearch($search, $filters, $perPage);
+        }
+
+        return $this->buildPublicQuery($filters)->paginate($perPage);
+    }
+
+    private function searchViaMeilisearch(string $term, array $filters, int $perPage): LengthAwarePaginator
+    {
+        return Product::search($term, function ($meilisearch, string $query, array $options) use ($filters) {
+            $meiliFilters = ['status = "active"'];
+
+            if (! empty($filters['category_id'])) {
+                $meiliFilters[] = 'category_id = ' . (int) $filters['category_id'];
+            }
+            if (! empty($filters['partner_id'])) {
+                $meiliFilters[] = 'partner_id = ' . (int) $filters['partner_id'];
+            }
+            if (! empty($filters['min_price'])) {
+                $meiliFilters[] = 'price >= ' . (int) $filters['min_price'];
+            }
+            if (! empty($filters['max_price'])) {
+                $meiliFilters[] = 'price <= ' . (int) $filters['max_price'];
+            }
+
+            $options['filter'] = implode(' AND ', $meiliFilters);
+            $options['sort']   = $this->buildMeiliSort($filters);
+
+            return $meilisearch->search($query, $options);
+        })
+            ->query(fn ($q) => $q->with(['partner:id,name,slug', 'category:id,name,slug', 'activeVariants']))
+            ->paginate($perPage);
+    }
+
+    private function buildPublicQuery(array $filters)
+    {
         $query = Product::with(['partner:id,name,slug', 'category:id,name,slug', 'activeVariants'])
             ->active();
 
         if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
         }
-
         if (! empty($filters['partner_id'])) {
             $query->where('partner_id', $filters['partner_id']);
         }
-
-        if (! empty($filters['search'])) {
-            $term = strtolower($filters['search']);
-            $query->where(function ($q) use ($term) {
-                $q->whereRaw('lower(name) like ?', ["%{$term}%"])
-                    ->orWhereRaw('lower(short_description) like ?', ["%{$term}%"]);
-            });
-        }
-
         if (! empty($filters['min_price'])) {
             $query->where('price', '>=', $filters['min_price']);
         }
-
         if (! empty($filters['max_price'])) {
             $query->where('price', '<=', $filters['max_price']);
         }
 
         $sortBy    = $filters['sort_by'] ?? 'published_at';
-        $sortOrder = $filters['sort_order'] ?? 'desc';
+        $sortOrder = ($filters['sort_order'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
 
         $allowedSorts = ['published_at', 'price', 'name'];
         if (in_array($sortBy, $allowedSorts, strict: true)) {
-            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+            $query->orderBy($sortBy, $sortOrder);
         }
 
-        return $query->paginate($filters['per_page'] ?? 20);
+        return $query;
+    }
+
+    private function buildMeiliSort(array $filters): array
+    {
+        $sortBy    = $filters['sort_by'] ?? 'published_at';
+        $sortOrder = ($filters['sort_order'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+        $allowed   = ['published_at', 'price', 'name'];
+
+        return in_array($sortBy, $allowed, strict: true)
+            ? ["{$sortBy}:{$sortOrder}"]
+            : ['published_at:desc'];
     }
 
     public function findPublicBySlug(string $slug): Product

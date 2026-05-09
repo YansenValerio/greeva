@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Searchable;
 
     protected $fillable = [
         'partner_id',
@@ -45,6 +46,36 @@ class Product extends Model
             'weight'                 => 'integer',
             'revenue_share_percent'  => 'integer',
             'published_at'           => 'datetime',
+        ];
+    }
+
+    // ── Scout / Meilisearch ──────────────────────────────────────────────────
+
+    public function searchableAs(): string
+    {
+        return 'products';
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return $this->status === ProductStatus::Active;
+    }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id'                   => $this->id,
+            'name'                 => $this->name,
+            'slug'                 => $this->slug,
+            'short_description'    => $this->short_description,
+            'description'          => $this->description,
+            'sustainability_notes' => $this->sustainability_notes,
+            'material'             => $this->material,
+            'category_id'          => $this->category_id,
+            'partner_id'           => $this->partner_id,
+            'status'               => $this->status->value,
+            'price'                => $this->price,
+            'published_at'         => $this->published_at?->timestamp,
         ];
     }
 
