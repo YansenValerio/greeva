@@ -179,6 +179,38 @@ pnpm dev                   # http://localhost:3000
 - [x] Semua listener queued (3 retries, 60s backoff) — notifikasi tidak memblokir request
 - [x] Aktivasi: isi `WHATSAPP_API_KEY` di `.env`
 
+### Step 13 — Admin & Account UX Enhancements ✅
+- [x] **Admin Partner Detail** `/admin/partners/[id]` — info mitra lengkap, earning summary (pending/available/paid), 10 earning terbaru, form edit (nama, %, info bank, status aktif), shortcut ke produk & payout mitra
+- [x] **Admin Categories CRUD** `/admin/categories` — list pohon (indentasi per depth + glyph `└`), inline form add/edit, parent select otomatis exclude self & descendants (cegah cycle), delete ditolak kalau masih ada produk/subkategori
+- [x] **Buyer Account** `/account` — form info pribadi (nama/email/phone) + form ubah password (current_password wajib, min 8 + confirmed), sidebar pintasan role-specific, inline error per-field dari Laravel validation
+- [x] **Search UI** — input pill-shaped di shop header sync dua arah dengan `?search=` URL + preserve filter kategori, navbar search icon buka overlay full-width (auto-focus, Escape to close), label "Hasil pencarian untuk: X (N produk)" di atas grid
+- [x] Backend: `Admin\CategoryController` + `CategoryPolicy` + `StoreCategoryRequest`/`UpdateCategoryRequest`, `PUT /auth/profile` + `POST /auth/change-password` di `AuthController` (revoke token lain saat ganti password), email berubah → reset `email_verified_at`
+
+### Step 14 — Product Reviews ✅
+- [x] Migration `product_reviews` — `order_item_id` unique (satu review per item), index `(product_id, is_approved)` + `(user_id, created_at)`
+- [x] `ProductReview` model + `ProductReviewPolicy` — `createForItem` cek order owner + status `completed` + belum direview; `update`/`delete` hanya owner (admin bisa delete)
+- [x] Backend endpoints: `GET /products/{slug}/reviews` (publik, paginated, sort `newest`/`highest`/`lowest` + summary `{total, average_rating}`), `POST /orders/{orderNumber}/items/{itemId}/review` (buyer), `PUT|DELETE /reviews/{review}`
+- [x] `ProductResource.reviews_count` + `average_rating` via `withCount` + `withAvg` — zero N+1 di list shop & search
+- [x] `OrderItemResource.review` (jika relasi loaded) + `product_slug` — UI tahu sudah diulas atau belum
+- [x] Komponen `StarRating` (display, support half-star) + `StarRatingInput` (interactive) + `ReviewForm` (rating wajib, body opsional max 2000 char)
+- [x] `ReviewList` di product detail — summary card + sort dropdown + privacy-masked name ("Yansen V.")
+- [x] Inline review CTA di order detail per item — tombol "Tulis Ulasan" muncul saat `status === 'completed'`, edit ulasan eksisting
+- [x] Rating ringkas di `ProductCard` (shop list) + header product detail
+
+### Step 15 — Shipment Tracking UI ✅
+- [x] `lib/shipping.ts` — daftar kurir Indonesia (JNE, J&T, SiCepat, POS, AnterAja, Ninja, Lainnya) + helper `getCourierTrackUrl(courier, tracking)` generate link tracking eksternal
+- [x] Admin order detail — form pengiriman saat status `shipped`: dropdown kurir + input layanan (REG/YES/dll) + nomor resi (wajib), validasi client + server (`required_if`)
+- [x] Admin shipment display — card mint dengan kurir + service + resi monospace + tombol "Lacak ↗" eksternal + timeline tanggal kirim/terima
+- [x] Buyer order detail — section "Pelacakan Pengiriman" muncul otomatis saat ada resi, card prominent dengan select-all friendly resi, tombol langsung ke situs kurir
+- [x] Fix type mismatch: `OrderShipment` sebelumnya pakai `carrier` (tidak match backend `courier`/`courier_service`), tambah field `packed_at`/`shipped_at`/`delivered_at`
+
+### Step 16 — Guest Cart ✅
+- [x] Backend: cart routes (GET/POST/PUT/DELETE) keluar dari `auth:sanctum`, `merge` tetap auth. `CartController.resolveKey()` resolve key dari Auth guard atau `X-Cart-Token` header (regex-validated 8–100 alfanum/dash). `CartService.touchGuestTtl()` refresh TTL 30 hari (sesuai `GREEVA_GUEST_CART_TTL_DAYS`) di setiap write
+- [x] Frontend: `lib/guestCart.ts` kelola UUID token di localStorage via `crypto.randomUUID`. Axios interceptor selalu attach `X-Cart-Token` header jika ada
+- [x] `cart.store.addItem` auto-generate guest token kalau belum login. `mergeAfterLogin()` dipanggil dari LoginForm & RegisterForm — guest cart digabung ke akun (qty dijumlah kalau variant sama) lalu token guest dihapus
+- [x] UX: `AddToCartButton` tidak lagi redirect ke login — guest langsung bisa belanja, login baru required saat checkout. Cart page accessible tanpa auth, tombol checkout adaptif ("Lanjut ke Checkout" vs "Masuk untuk Checkout")
+- [x] Navbar auto-fetch cart saat hydrated untuk auth user atau guest yang sudah punya token — badge count konsisten antar reload
+
 ### Backlog
 - [ ] _(kosong — semua fitur core selesai)_
 
