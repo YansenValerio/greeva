@@ -103,6 +103,16 @@ class Product extends Model
             ->orderBy('sort_order');
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class)->where('is_approved', true);
+    }
+
     // ── Scopes ───────────────────────────────────────────────────────────────
 
     public function scopeActive($query)

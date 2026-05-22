@@ -21,16 +21,28 @@ class OrderItemResource extends JsonResource
             'variant_name'   => $this->variant_name,
             'sku'            => $this->sku,
             'product_image'  => $this->product_image,
-            'unit_price'     => $this->unit_price,
-            'price_formatted' => Money::format($this->unit_price),
-            'quantity'       => $this->quantity,
-            'subtotal'       => $this->subtotal,
-            'subtotal_formatted' => Money::format($this->subtotal),
+            'unit_price'         => $this->unit_price,
+            'price_formatted'    => Money::format($this->unit_price ?? 0),
+            'quantity'           => $this->quantity,
+            'subtotal'           => $this->subtotal,
+            'subtotal_formatted' => Money::format($this->subtotal ?? 0),
 
             // Hanya admin / partner yang boleh lihat data bagi hasil
             'revenue_share_percent'  => $this->when($isPrivileged, $this->revenue_share_percent),
             'partner_earning_amount' => $this->when($isPrivileged, $this->partner_earning_amount),
             'partner_id'             => $this->when($isPrivileged, $this->partner_id),
+
+            // Untuk produk: kebutuhan link ke product detail / write review
+            'product_id'   => $this->product_id,
+            'product_slug' => $this->whenLoaded('product', fn () => $this->product?->slug),
+
+            // Review eksisting (jika relasi dimuat)
+            'review' => $this->whenLoaded('review', fn () => $this->review ? [
+                'id'         => $this->review->id,
+                'rating'     => $this->review->rating,
+                'body'       => $this->review->body,
+                'created_at' => $this->review->created_at?->toISOString(),
+            ] : null),
         ];
     }
 }

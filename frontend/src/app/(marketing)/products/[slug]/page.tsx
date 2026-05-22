@@ -6,6 +6,8 @@ import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { ProductImageGallery } from '@/components/catalog/ProductImageGallery';
 import { AddToCartButton } from '@/components/catalog/AddToCartButton';
+import { StarRating } from '@/components/reviews/StarRating';
+import { ReviewList } from '@/components/reviews/ReviewList';
 import { getProductBySlug } from '@/lib/api/products';
 
 interface ProductPageProps {
@@ -79,6 +81,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <h1 className="text-h1 font-bold text-greeva-black text-balance leading-tight">
               {product.name}
             </h1>
+
+            {/* Rating ringkas */}
+            {product.reviews_count > 0 && (
+              <a
+                href="#reviews"
+                className="mt-2 inline-flex items-center gap-2 text-sm text-gray-600 hover:text-greeva-starbucks-green transition-colors"
+              >
+                <StarRating value={product.average_rating ?? 0} size={14} />
+                <span>
+                  {product.average_rating?.toFixed(1)} · {product.reviews_count} ulasan
+                </span>
+              </a>
+            )}
 
             {/* Harga */}
             <div className="mt-4 flex items-baseline gap-3">
@@ -167,6 +182,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
             )}
           </div>
         </div>
+
+        {/* Section ulasan */}
+        <section id="reviews" className="mt-16 border-t border-gray-100 pt-10">
+          <h2 className="mb-6 text-h2 font-bold text-greeva-black">Ulasan Pembeli</h2>
+          <ReviewList slug={product.slug} />
+        </section>
       </Container>
     </main>
   );

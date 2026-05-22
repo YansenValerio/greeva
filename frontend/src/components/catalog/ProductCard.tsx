@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
+import { StarRating } from '@/components/reviews/StarRating';
 import type { Product } from '@/types/product';
 
 interface ProductCardProps {
@@ -69,6 +70,12 @@ export function ProductCard({ product }: ProductCardProps) {
               />
             )}
           </div>
+          {product.reviews_count > 0 && (
+            <div className="mt-2 flex items-center gap-1.5">
+              <StarRating value={product.average_rating ?? 0} size={12} />
+              <span className="text-xs text-gray-400">({product.reviews_count})</span>
+            </div>
+          )}
         </div>
       </div>
     </Link>

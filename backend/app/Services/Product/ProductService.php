@@ -51,13 +51,18 @@ class ProductService
 
             return $meilisearch->search($query, $options);
         })
-            ->query(fn ($q) => $q->with(['partner:id,name,slug', 'category:id,name,slug', 'activeVariants']))
+            ->query(fn ($q) => $q
+                ->with(['partner:id,name,slug', 'category:id,name,slug', 'activeVariants'])
+                ->withCount(['approvedReviews as reviews_count'])
+                ->withAvg(['approvedReviews as average_rating'], 'rating'))
             ->paginate($perPage);
     }
 
     private function buildPublicQuery(array $filters)
     {
         $query = Product::with(['partner:id,name,slug', 'category:id,name,slug', 'activeVariants'])
+            ->withCount(['approvedReviews as reviews_count'])
+            ->withAvg(['approvedReviews as average_rating'], 'rating')
             ->active();
 
         if (! empty($filters['category_id'])) {
@@ -97,7 +102,13 @@ class ProductService
 
     public function findPublicBySlug(string $slug): Product
     {
-        return Product::with(['partner:id,name,slug,logo', 'category:id,name,slug', 'activeVariants'])
+        return Product::with([
+            'partner:id,name,slug,logo',
+            'category:id,name,slug',
+            'variants' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
+        ])
+            ->withCount(['approvedReviews as reviews_count'])
+            ->withAvg(['approvedReviews as average_rating'], 'rating')
             ->active()
             ->where('slug', $slug)
             ->firstOrFail();

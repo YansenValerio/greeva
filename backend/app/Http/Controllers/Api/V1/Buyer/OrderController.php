@@ -19,7 +19,7 @@ class OrderController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Order::with(['items'])
+        $query = Order::with(['items.product:id,slug', 'items.review'])
             ->forUser($request->user()->id)
             ->latest();
 
@@ -38,7 +38,7 @@ class OrderController extends Controller
      */
     public function show(Request $request, string $orderNumber): JsonResponse
     {
-        $order = Order::with(['items', 'shipments'])
+        $order = Order::with(['items.product:id,slug', 'items.review', 'shipments'])
             ->where('order_number', $orderNumber)
             ->firstOrFail();
 

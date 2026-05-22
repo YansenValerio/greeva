@@ -9,6 +9,14 @@ export interface OrderItem {
   quantity: number;
   subtotal: number; // sen
   subtotal_formatted: string;
+  product_id?: number;
+  product_slug?: string | null;
+  review?: {
+    id: number;
+    rating: number;
+    body: string | null;
+    created_at: string;
+  } | null;
 }
 
 export interface OrderShipment {

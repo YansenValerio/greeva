@@ -33,6 +33,10 @@ class ProductResource extends JsonResource
             'meta_title'           => $this->meta_title,
             'meta_description'     => $this->meta_description,
             'total_stock'          => $this->totalStock(),
+            'reviews_count'        => (int) ($this->reviews_count ?? 0),
+            'average_rating'       => $this->average_rating !== null
+                ? round((float) $this->average_rating, 2)
+                : null,
             'created_at'           => $this->created_at?->toDateTimeString(),
             'updated_at'           => $this->updated_at?->toDateTimeString(),
 

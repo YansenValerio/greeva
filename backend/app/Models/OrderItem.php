@@ -66,4 +66,9 @@ class OrderItem extends Model
     {
         return $this->hasOne(PartnerEarning::class);
     }
+
+    public function review(): HasOne
+    {
+        return $this->hasOne(ProductReview::class);
+    }
 }

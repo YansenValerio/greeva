@@ -35,6 +35,8 @@ export interface Product {
   meta_title: string | null;
   meta_description: string | null;
   total_stock: number;
+  reviews_count: number;
+  average_rating: number | null;
   created_at: string;
   updated_at: string;
   partner?: ProductPartner;

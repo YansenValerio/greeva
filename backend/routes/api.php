@@ -48,6 +48,7 @@ Route::prefix('v1')->group(function () {
     // ── Public — Produk ─────────────────────────────────────────────────────
     Route::get('products', [PublicProductController::class, 'index']);
     Route::get('products/{slug}', [PublicProductController::class, 'show']);
+    Route::get('products/{slug}/reviews', [\App\Http\Controllers\Api\V1\Public\ProductReviewController::class, 'index']);
 
     // ── Public — Midtrans webhook ───────────────────────────────────────────
     Route::post('payment/webhook', [PaymentController::class, 'handle']);
@@ -155,5 +156,13 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [Buyer\OrderController::class, 'index']);
             Route::get('{orderNumber}', [Buyer\OrderController::class, 'show']);
         });
+
+        // Product reviews (buyer create; owner/admin update & delete)
+        Route::middleware('role:buyer')->post(
+            'orders/{orderNumber}/items/{itemId}/review',
+            [Buyer\ReviewController::class, 'store'],
+        );
+        Route::put('reviews/{review}', [Buyer\ReviewController::class, 'update']);
+        Route::delete('reviews/{review}', [Buyer\ReviewController::class, 'destroy']);
     });
 });
