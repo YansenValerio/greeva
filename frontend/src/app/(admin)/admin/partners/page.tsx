@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { adminGetPartners } from '@/lib/api/admin';
@@ -35,7 +36,11 @@ export default function AdminPartnersPage() {
       ) : (
         <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
           {partners.map((p) => (
-            <div key={p.id} className="flex items-center gap-4 px-5 py-4">
+            <Link
+              key={p.id}
+              href={`/admin/partners/${p.id}`}
+              className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-greeva-mint-light/40"
+            >
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-greeva-black">{p.name}</p>
                 {p.user && (
@@ -49,8 +54,9 @@ export default function AdminPartnersPage() {
                 <Badge variant={p.is_active ? 'green' : 'gray'}>
                   {p.is_active ? 'Aktif' : 'Nonaktif'}
                 </Badge>
+                <span className="text-gray-300">›</span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
