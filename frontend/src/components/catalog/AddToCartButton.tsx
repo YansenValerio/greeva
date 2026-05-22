@@ -1,10 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
 import type { ProductVariant } from '@/types/product';
 
@@ -15,8 +13,6 @@ interface AddToCartButtonProps {
 }
 
 export function AddToCartButton({ variants, defaultPrice, totalStock }: AddToCartButtonProps) {
-  const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
   const addItem = useCartStore((s) => s.addItem);
 
   const activeVariants = variants.filter((v) => v.is_active);
@@ -30,10 +26,6 @@ export function AddToCartButton({ variants, defaultPrice, totalStock }: AddToCar
   const effectivePrice = selected?.price ?? defaultPrice;
 
   const handleAdd = async () => {
-    if (!isAuthenticated) {
-      router.push(`/login?next=${encodeURIComponent(window.location.pathname)}`);
-      return;
-    }
     if (!selected) return;
 
     setLoading(true);
@@ -58,7 +50,7 @@ export function AddToCartButton({ variants, defaultPrice, totalStock }: AddToCar
   return (
     <div className="space-y-4">
       {/* Variant selector */}
-      {activeVariants.length > 1 && (
+      {activeVariants.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {activeVariants.map((v) => (
             <button
@@ -117,13 +109,11 @@ export function AddToCartButton({ variants, defaultPrice, totalStock }: AddToCar
               ? '✓ Ditambahkan!'
               : outOfStock
                 ? 'Stok Habis'
-                : isAuthenticated
-                  ? 'Tambah ke Keranjang'
-                  : 'Masuk untuk Belanja'}
+                : 'Tambah ke Keranjang'}
         </button>
       </div>
 
-      {effectivePrice > 0 && activeVariants.length > 1 && selected && (
+      {effectivePrice > 0 && activeVariants.length > 1 && selected && selected.price && (
         <p className="text-xs text-gray-500">
           Harga varian:{' '}
           <span className="font-medium text-greeva-forest-dark">

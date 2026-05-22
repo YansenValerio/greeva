@@ -19,6 +19,20 @@ class CartService
         return "cart:guest:{$token}";
     }
 
+    /** TTL guest cart dalam detik (default 30 hari) */
+    private function guestTtlSeconds(): int
+    {
+        return (int) config('greeva.cart.guest_ttl_days', 30) * 86400;
+    }
+
+    /** Refresh TTL untuk guest cart key — dipanggil setiap write */
+    public function touchGuestTtl(string $key): void
+    {
+        if (str_starts_with($key, 'cart:guest:')) {
+            Redis::expire($key, $this->guestTtlSeconds());
+        }
+    }
+
     /** Ambil semua item dari keranjang */
     public function get(string $key): array
     {
@@ -63,6 +77,7 @@ class CartService
         ];
 
         Redis::hset($key, (string) $variantId, json_encode($item));
+        $this->touchGuestTtl($key);
 
         return $item;
     }
@@ -91,6 +106,7 @@ class CartService
         $item['price']    = $variant->effectivePrice(); // refresh harga
 
         Redis::hset($key, (string) $variantId, json_encode($item));
+        $this->touchGuestTtl($key);
 
         return $item;
     }

@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import * as cartApi from '@/lib/api/cart';
+import { ensureGuestCartToken, getGuestCartToken, clearGuestCartToken } from '@/lib/guestCart';
 import type { CartItem } from '@/types/cart';
 
 function calcSubtotal(items: CartItem[]): number {
@@ -20,6 +21,8 @@ interface CartState {
   removeItem: (variantId: number) => Promise<void>;
   clear: () => Promise<void>;
   reset: () => void;
+  /** Dipanggil setelah user login — gabungkan guest cart ke akun jika ada token */
+  mergeAfterLogin: () => Promise<void>;
 }
 
 export const useCartStore = create<CartState>()((set, get) => ({
@@ -41,6 +44,11 @@ export const useCartStore = create<CartState>()((set, get) => ({
   },
 
   addItem: async (variantId, qty) => {
+    // Pastikan guest token ada sebelum write (interceptor akan kirim header)
+    if (typeof window !== 'undefined' && !localStorage.getItem('greeva_token')) {
+      ensureGuestCartToken();
+    }
+
     const item = await cartApi.addCartItem(variantId, qty);
     set((state) => {
       const existing = state.items.find((i) => i.variant_id === variantId);
@@ -83,4 +91,19 @@ export const useCartStore = create<CartState>()((set, get) => ({
   },
 
   reset: () => set({ items: [], count: 0, subtotal: 0 }),
+
+  mergeAfterLogin: async () => {
+    const guestToken = getGuestCartToken();
+    if (!guestToken) return;
+
+    try {
+      const cart = await cartApi.mergeGuestCart(guestToken);
+      set({ items: cart.items, count: cart.count, subtotal: cart.subtotal });
+    } catch {
+      // Merge gagal — biarkan, fetch ulang dari auth cart
+      await get().fetch();
+    } finally {
+      clearGuestCartToken();
+    }
+  },
 }));

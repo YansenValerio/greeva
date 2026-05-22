@@ -59,6 +59,15 @@ Route::prefix('v1')->group(function () {
     // ── Upload (auth required) ──────────────────────────────────────────────
     Route::middleware('auth:sanctum')->post('upload/image', [UploadController::class, 'image']);
 
+    // ── Cart — bisa diakses guest (via X-Cart-Token header) atau auth user ────
+    Route::prefix('cart')->group(function () {
+        Route::get('/', [CartController::class, 'show']);
+        Route::post('items', [CartController::class, 'addItem']);
+        Route::put('items/{variantId}', [CartController::class, 'updateItem']);
+        Route::delete('items/{variantId}', [CartController::class, 'removeItem']);
+        Route::delete('/', [CartController::class, 'clear']);
+    });
+
     // ── Protected routes ────────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {
 
@@ -138,15 +147,8 @@ Route::prefix('v1')->group(function () {
 
         // ── Buyer ───────────────────────────────────────────────────────────
 
-        // Cart (semua role yang login bisa pakai keranjang)
-        Route::prefix('cart')->group(function () {
-            Route::get('/', [CartController::class, 'show']);
-            Route::post('items', [CartController::class, 'addItem']);
-            Route::put('items/{variantId}', [CartController::class, 'updateItem']);
-            Route::delete('items/{variantId}', [CartController::class, 'removeItem']);
-            Route::delete('/', [CartController::class, 'clear']);
-            Route::post('merge', [CartController::class, 'merge']);
-        });
+        // Cart merge — require auth (gabung guest cart ke akun)
+        Route::post('cart/merge', [CartController::class, 'merge']);
 
         // Checkout
         Route::middleware('role:buyer')->post('checkout', [Buyer\CheckoutController::class, 'store']);

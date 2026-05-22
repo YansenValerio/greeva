@@ -11,6 +11,7 @@ import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { register as registerApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/stores/auth.store';
+import { useCartStore } from '@/stores/cart.store';
 
 const schema = z
   .object({
@@ -37,6 +38,7 @@ export function RegisterForm() {
   const next = searchParams.get('next') ?? '/';
 
   const authLogin = useAuthStore((s) => s.login);
+  const mergeCart = useCartStore((s) => s.mergeAfterLogin);
 
   const {
     register,
@@ -56,6 +58,7 @@ export function RegisterForm() {
       };
       const res = await registerApi(payload);
       authLogin(res.data, res.token);
+      await mergeCart();
       router.push(next);
     } catch (e) {
       const msg = axios.isAxiosError(e)

@@ -10,6 +10,7 @@ use App\Http\Requests\Cart\UpdateCartItemRequest;
 use App\Services\Cart\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
@@ -20,15 +21,21 @@ class CartController extends Controller
     /**
      * GET /api/v1/cart
      * Tampilkan isi keranjang beserta subtotal.
+     * Buyer login atau guest (via X-Cart-Token header).
      */
     public function show(Request $request): JsonResponse
     {
-        $key   = $this->cartService->getAuthKey($request->user()->id);
-        $items = $this->cartService->get($key);
+        $key = $this->resolveKey($request, required: false);
+
+        if ($key === null) {
+            return response()->json([
+                'data' => ['items' => [], 'count' => 0, 'subtotal' => 0],
+            ]);
+        }
 
         return response()->json([
             'data' => [
-                'items'    => $items,
+                'items'    => $this->cartService->get($key),
                 'count'    => $this->cartService->count($key),
                 'subtotal' => $this->cartService->subtotal($key),
             ],
@@ -37,11 +44,10 @@ class CartController extends Controller
 
     /**
      * POST /api/v1/cart/items
-     * Tambah item ke keranjang.
      */
     public function addItem(AddToCartRequest $request): JsonResponse
     {
-        $key  = $this->cartService->getAuthKey($request->user()->id);
+        $key  = $this->resolveKey($request, required: true);
         $item = $this->cartService->addItem(
             $key,
             $request->integer('variant_id'),
@@ -53,11 +59,10 @@ class CartController extends Controller
 
     /**
      * PUT /api/v1/cart/items/{variantId}
-     * Update qty item. Kirim qty=0 untuk hapus.
      */
     public function updateItem(UpdateCartItemRequest $request, int $variantId): JsonResponse
     {
-        $key  = $this->cartService->getAuthKey($request->user()->id);
+        $key  = $this->resolveKey($request, required: true);
         $item = $this->cartService->updateItem($key, $variantId, $request->integer('quantity'));
 
         if ($item === null) {
@@ -69,11 +74,10 @@ class CartController extends Controller
 
     /**
      * DELETE /api/v1/cart/items/{variantId}
-     * Hapus satu item dari keranjang.
      */
     public function removeItem(Request $request, int $variantId): JsonResponse
     {
-        $key = $this->cartService->getAuthKey($request->user()->id);
+        $key = $this->resolveKey($request, required: true);
         $this->cartService->removeItem($key, $variantId);
 
         return response()->json(['message' => 'Item berhasil dihapus dari keranjang.']);
@@ -81,11 +85,10 @@ class CartController extends Controller
 
     /**
      * DELETE /api/v1/cart
-     * Kosongkan seluruh keranjang.
      */
     public function clear(Request $request): JsonResponse
     {
-        $key = $this->cartService->getAuthKey($request->user()->id);
+        $key = $this->resolveKey($request, required: true);
         $this->cartService->clear($key);
 
         return response()->json(['message' => 'Keranjang berhasil dikosongkan.']);
@@ -93,12 +96,14 @@ class CartController extends Controller
 
     /**
      * POST /api/v1/cart/merge
-     * Merge guest cart ke auth cart setelah login.
+     * Merge guest cart ke auth cart setelah login. Requires auth.
      * Body: { guest_token: "uuid" }
      */
     public function merge(Request $request): JsonResponse
     {
-        $request->validate(['guest_token' => ['required', 'string', 'max:100']]);
+        $request->validate([
+            'guest_token' => ['required', 'string', 'regex:/^[a-zA-Z0-9-]{8,100}$/'],
+        ]);
 
         $guestKey = $this->cartService->getGuestKey($request->input('guest_token'));
         $authKey  = $this->cartService->getAuthKey($request->user()->id);
@@ -108,8 +113,37 @@ class CartController extends Controller
         $items = $this->cartService->get($authKey);
 
         return response()->json([
-            'data'    => ['items' => $items, 'count' => count($items)],
+            'data'    => [
+                'items'    => $items,
+                'count'    => $this->cartService->count($authKey),
+                'subtotal' => $this->cartService->subtotal($authKey),
+            ],
             'message' => 'Keranjang berhasil digabungkan.',
         ]);
+    }
+
+    /**
+     * Resolve cart key dari auth user atau X-Cart-Token header.
+     *
+     * @param  bool  $required  jika true: abort 400 kalau tidak ada user dan tidak ada token valid.
+     * @return string|null  key Redis atau null (jika $required = false dan tidak ada apa pun)
+     */
+    private function resolveKey(Request $request, bool $required): ?string
+    {
+        $user = Auth::guard('sanctum')->user();
+        if ($user) {
+            return $this->cartService->getAuthKey($user->id);
+        }
+
+        $token = $request->header('X-Cart-Token');
+        if ($token && preg_match('/^[a-zA-Z0-9-]{8,100}$/', $token)) {
+            return $this->cartService->getGuestKey($token);
+        }
+
+        if ($required) {
+            abort(400, 'Header X-Cart-Token wajib untuk guest cart.');
+        }
+
+        return null;
     }
 }

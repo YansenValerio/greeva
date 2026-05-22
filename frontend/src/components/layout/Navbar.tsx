@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
 import { useHydrated } from '@/hooks/useHydrated';
 import { logout as logoutApi } from '@/lib/api/auth';
+import { getGuestCartToken } from '@/lib/guestCart';
 
 export function Navbar() {
   const router = useRouter();
@@ -49,7 +50,15 @@ export function Navbar() {
   }
 
   const { isAuthenticated, user, logout } = useAuthStore();
-  const { count, reset: resetCart } = useCartStore();
+  const { count, reset: resetCart, fetch: fetchCart } = useCartStore();
+
+  // Sync cart count saat hydrated — untuk auth user atau guest yang sudah punya token
+  useEffect(() => {
+    if (!hydrated) return;
+    if (isAuthenticated || getGuestCartToken()) {
+      fetchCart();
+    }
+  }, [hydrated, isAuthenticated, fetchCart]);
 
   const handleLogout = async () => {
     try {

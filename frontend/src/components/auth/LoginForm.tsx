@@ -27,6 +27,7 @@ export function LoginForm() {
 
   const authLogin = useAuthStore((s) => s.login);
   const fetchCart = useCartStore((s) => s.fetch);
+  const mergeCart = useCartStore((s) => s.mergeAfterLogin);
 
   const {
     register,
@@ -39,8 +40,15 @@ export function LoginForm() {
     try {
       const res = await login(values);
       authLogin(res.data, res.token);
+      // Merge guest cart kalau ada, lalu fallback fetch auth cart
+      await mergeCart();
       await fetchCart();
-      router.push(next);
+      const role = res.data.role;
+      const destination =
+        role === 'admin' ? '/admin/dashboard' :
+        role === 'partner' ? '/partner/dashboard' :
+        next;
+      router.push(destination);
     } catch (e) {
       const msg = axios.isAxiosError(e)
         ? (e.response?.data?.message as string | undefined) ?? 'Login gagal.'

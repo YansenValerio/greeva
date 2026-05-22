@@ -31,3 +31,10 @@ export async function removeCartItem(variantId: number): Promise<void> {
 export async function clearCart(): Promise<void> {
   await client.delete('/cart');
 }
+
+export async function mergeGuestCart(guestToken: string): Promise<CartData> {
+  const { data } = await client.post<{ data: CartData }>('/cart/merge', {
+    guest_token: guestToken,
+  });
+  return data.data;
+}

@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { ShoppingBag } from 'lucide-react';
 import { Container } from '@/components/shared/Container';
 import { Price } from '@/components/shared/Price';
@@ -13,18 +12,13 @@ import { useHydrated } from '@/hooks/useHydrated';
 
 export default function CartPage() {
   const hydrated = useHydrated();
-  const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const { items, subtotal, isLoading, fetch } = useCartStore();
 
   useEffect(() => {
     if (!hydrated) return;
-    if (!isAuthenticated) {
-      router.push('/login?next=/cart');
-      return;
-    }
     fetch();
-  }, [hydrated, isAuthenticated, fetch, router]);
+  }, [hydrated, fetch]);
 
   if (!hydrated || isLoading) {
     return (
@@ -110,11 +104,17 @@ export default function CartPage() {
               </div>
 
               <Link
-                href="/checkout"
+                href={isAuthenticated ? '/checkout' : '/login?next=/checkout'}
                 className="mt-6 block w-full rounded-pill bg-greeva-forest py-4 text-center text-base font-semibold text-white transition-all hover:bg-greeva-starbucks-green hover:scale-[1.01]"
               >
-                Lanjut ke Checkout
+                {isAuthenticated ? 'Lanjut ke Checkout' : 'Masuk untuk Checkout'}
               </Link>
+
+              {!isAuthenticated && (
+                <p className="mt-2 text-center text-xs text-gray-500">
+                  Login diperlukan untuk menyelesaikan pesanan
+                </p>
+              )}
 
               <Link
                 href="/shop"
