@@ -11,6 +11,7 @@ import {
   updateProfile,
   changePassword,
   getMe,
+  resendVerificationEmail,
   type UpdateProfilePayload,
 } from '@/lib/api/auth';
 
@@ -55,6 +56,9 @@ export default function AccountPage() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState('');
   const [passwordErrors, setPasswordErrors] = useState<FieldErrors>({});
+
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
 
   // Redirect if not authenticated; sync form with user
   useEffect(() => {
@@ -111,6 +115,19 @@ export default function AccountPage() {
     }
   }
 
+  async function handleResendVerification() {
+    setResending(true);
+    setResendMessage('');
+    try {
+      const res = await resendVerificationEmail();
+      setResendMessage(res.message);
+    } catch {
+      setResendMessage('Gagal mengirim email verifikasi. Coba lagi nanti.');
+    } finally {
+      setResending(false);
+    }
+  }
+
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPasswordSaving(true);
@@ -162,6 +179,28 @@ export default function AccountPage() {
           </div>
           <Badge variant="green">{user.role_label}</Badge>
         </div>
+
+        {/* Email verification banner */}
+        {!user.email_verified_at && (
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-card border border-amber-200 bg-amber-50 px-5 py-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-900">
+                Email kamu belum diverifikasi
+              </p>
+              <p className="mt-0.5 text-xs text-amber-800">
+                Cek inbox di <span className="font-mono">{user.email}</span> untuk tautan
+                verifikasi. {resendMessage && <span className="font-medium">{resendMessage}</span>}
+              </p>
+            </div>
+            <button
+              onClick={handleResendVerification}
+              disabled={resending}
+              className="shrink-0 rounded-pill border border-amber-300 bg-white px-4 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50 transition-colors"
+            >
+              {resending ? 'Mengirim...' : 'Kirim Ulang'}
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Sidebar */}

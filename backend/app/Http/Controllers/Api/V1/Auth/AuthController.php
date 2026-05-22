@@ -5,16 +5,24 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Http\Requests\Auth\VerifyEmailRequest;
 use App\Http\Requests\Profile\ChangePasswordRequest;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
+use App\Models\User;
 use App\Services\Auth\AuthService;
 use App\Support\AuditLogger;
+use App\Support\EmailVerificationToken;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -99,6 +107,111 @@ class AuthController extends Controller
             'data'    => UserResource::make($user->fresh()->loadMissing('partner')),
             'message' => 'Profil berhasil diperbarui.',
         ]);
+    }
+
+    /**
+     * POST /api/v1/auth/forgot-password
+     * Kirim email reset password. Selalu return 200 untuk hindari email enumeration.
+     */
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $status = Password::sendResetLink($request->only('email'));
+
+        // Log audit hanya jika berhasil kirim
+        if ($status === Password::RESET_LINK_SENT) {
+            $user = User::where('email', $request->input('email'))->first();
+            if ($user) {
+                AuditLogger::log('password_reset_requested', $user);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Jika email terdaftar, instruksi reset password sudah kami kirim.',
+        ]);
+    }
+
+    /**
+     * POST /api/v1/auth/reset-password
+     * Reset password pakai token dari email.
+     */
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password'       => $password, // di-hash via cast
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                // Revoke semua token aktif — paksa login ulang
+                $user->tokens()->delete();
+
+                event(new PasswordReset($user));
+
+                AuditLogger::log('password_reset', $user);
+            },
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return response()->json(['message' => 'Password berhasil di-reset. Silakan login dengan password baru.']);
+        }
+
+        return response()->json([
+            'message' => __($status),
+            'errors'  => ['email' => [__($status)]],
+        ], 422);
+    }
+
+    /**
+     * POST /api/v1/auth/email/verify
+     * Verifikasi email pakai signed payload dari email notification.
+     */
+    public function verifyEmail(VerifyEmailRequest $request): JsonResponse
+    {
+        $user = User::find($request->integer('id'));
+        if (! $user) {
+            return response()->json(['message' => 'Tautan verifikasi tidak valid.'], 422);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email sudah diverifikasi sebelumnya.']);
+        }
+
+        $valid = EmailVerificationToken::isValid(
+            userId: (int) $request->integer('id'),
+            hash: $request->string('hash')->toString(),
+            expires: (int) $request->integer('expires'),
+            signature: $request->string('signature')->toString(),
+            userEmail: $user->email,
+        );
+
+        if (! $valid) {
+            return response()->json(['message' => 'Tautan verifikasi sudah kedaluwarsa atau tidak valid.'], 422);
+        }
+
+        $user->markEmailAsVerified();
+
+        AuditLogger::log('email_verified', $user);
+
+        return response()->json(['message' => 'Email berhasil diverifikasi.']);
+    }
+
+    /**
+     * POST /api/v1/auth/email/verification-notification
+     * Kirim ulang email verifikasi. Requires: auth:sanctum
+     */
+    public function resendVerificationEmail(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email sudah diverifikasi.']);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json(['message' => 'Email verifikasi sudah dikirim ulang.']);
     }
 
     /**

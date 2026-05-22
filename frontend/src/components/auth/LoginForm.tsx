@@ -85,6 +85,15 @@ export function LoginForm() {
         />
       </FormField>
 
+      <div className="text-right">
+        <Link
+          href="/forgot-password"
+          className="text-sm text-greeva-starbucks-green hover:underline"
+        >
+          Lupa kata sandi?
+        </Link>
+      </div>
+
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? 'Memproses...' : 'Masuk'}
       </Button>

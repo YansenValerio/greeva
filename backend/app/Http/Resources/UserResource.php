@@ -19,6 +19,7 @@ class UserResource extends JsonResource
             'role_label' => $this->role->label(),
             'phone'      => $this->phone,
             'avatar'     => $this->avatar,
+            'email_verified_at' => $this->email_verified_at?->toISOString(),
             'created_at' => $this->created_at->toISOString(),
 
             // Hanya disertakan jika relasi dimuat (via ->load('partner'))

@@ -9,6 +9,7 @@ import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { StarRating } from '@/components/reviews/StarRating';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
+import { OrderTimeline } from '@/components/orders/OrderTimeline';
 import { getCourierTrackUrl } from '@/lib/shipping';
 import { getOrder } from '@/lib/api/orders';
 import { useAuthStore } from '@/stores/auth.store';
@@ -112,6 +113,12 @@ export default function OrderDetailPage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Items + shipping */}
           <div className="space-y-6 lg:col-span-2">
+            {/* Status timeline */}
+            <div className="rounded-card bg-white p-6 shadow-card">
+              <h2 className="mb-5 text-h3 font-semibold text-greeva-black">Status Pesanan</h2>
+              <OrderTimeline order={order} />
+            </div>
+
             {/* Items */}
             <div className="rounded-card bg-white p-6 shadow-card">
               <h2 className="mb-4 text-h3 font-semibold text-greeva-black">Item Pesanan</h2>

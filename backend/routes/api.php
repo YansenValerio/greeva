@@ -34,11 +34,22 @@ Route::prefix('v1')->group(function () {
         Route::post('register', [AuthController::class, 'register']);
         Route::post('login', [AuthController::class, 'login']);
 
+        // Forgot/Reset password (public)
+        Route::middleware('throttle:6,1')->group(function () {
+            Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+            Route::post('reset-password', [AuthController::class, 'resetPassword']);
+        });
+
+        // Email verification — POST publik karena pakai signed payload
+        Route::middleware('throttle:6,1')->post('email/verify', [AuthController::class, 'verifyEmail']);
+
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('logout', [AuthController::class, 'logout']);
             Route::get('me', [AuthController::class, 'me']);
             Route::put('profile', [AuthController::class, 'updateProfile']);
             Route::post('change-password', [AuthController::class, 'changePassword']);
+            Route::post('email/verification-notification', [AuthController::class, 'resendVerificationEmail'])
+                ->middleware('throttle:6,1');
         });
     });
 

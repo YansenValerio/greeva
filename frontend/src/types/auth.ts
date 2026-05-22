@@ -6,6 +6,7 @@ export interface User {
   role_label: string;
   phone: string | null;
   avatar: string | null;
+  email_verified_at: string | null;
   created_at: string;
 }
 

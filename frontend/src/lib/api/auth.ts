@@ -42,3 +42,37 @@ export interface ChangePasswordPayload {
 export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
   await client.post('/auth/change-password', payload);
 }
+
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  const { data } = await client.post<{ message: string }>('/auth/forgot-password', { email });
+  return data;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
+export async function resetPassword(payload: ResetPasswordPayload): Promise<{ message: string }> {
+  const { data } = await client.post<{ message: string }>('/auth/reset-password', payload);
+  return data;
+}
+
+export interface VerifyEmailPayload {
+  id: number;
+  hash: string;
+  expires: number;
+  signature: string;
+}
+
+export async function verifyEmail(payload: VerifyEmailPayload): Promise<{ message: string }> {
+  const { data } = await client.post<{ message: string }>('/auth/email/verify', payload);
+  return data;
+}
+
+export async function resendVerificationEmail(): Promise<{ message: string }> {
+  const { data } = await client.post<{ message: string }>('/auth/email/verification-notification');
+  return data;
+}

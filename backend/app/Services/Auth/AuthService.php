@@ -7,6 +7,7 @@ namespace App\Services\Auth;
 use App\Enums\UserRole;
 use App\Exceptions\InvalidCredentialsException;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 
 class AuthService
@@ -26,6 +27,9 @@ class AuthService
             'role'     => UserRole::Buyer,
             'phone'    => $data['phone'] ?? null,
         ]);
+
+        // Trigger Laravel's default listener untuk kirim email verifikasi
+        event(new Registered($user));
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
