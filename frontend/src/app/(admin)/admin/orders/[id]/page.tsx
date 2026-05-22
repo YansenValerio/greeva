@@ -7,7 +7,12 @@ import Link from 'next/link';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
-import { adminGetOrder, adminUpdateOrderStatus } from '@/lib/api/admin';
+import {
+  adminGetOrder,
+  adminUpdateOrderStatus,
+  type AdminUpdateOrderStatusPayload,
+} from '@/lib/api/admin';
+import { COURIERS, getCourierTrackUrl } from '@/lib/shipping';
 import type { Order } from '@/types/order';
 
 const ORDER_STATUSES = [
@@ -39,6 +44,8 @@ export default function AdminOrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [newStatus, setNewStatus] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [courier, setCourier] = useState('JNE');
+  const [courierService, setCourierService] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -51,18 +58,26 @@ export default function AdminOrderDetailPage() {
 
   async function handleStatusUpdate() {
     if (!order) return;
+    if (newStatus === 'shipped' && !trackingNumber.trim()) {
+      setError('Nomor resi wajib diisi saat status "Dikirim".');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
-      const payload: { status: string; tracking_number?: string } = { status: newStatus };
-      if (newStatus === 'shipped' && trackingNumber) {
-        payload.tracking_number = trackingNumber;
+      const payload: AdminUpdateOrderStatusPayload = { status: newStatus };
+      if (newStatus === 'shipped') {
+        payload.tracking_number = trackingNumber.trim();
+        payload.courier = courier;
+        if (courierService.trim()) payload.courier_service = courierService.trim();
       }
       const updated = await adminUpdateOrderStatus(order.id, payload);
       setOrder(updated);
       setTrackingNumber('');
-    } catch {
-      setError('Gagal mengubah status. Coba lagi.');
+      setCourierService('');
+    } catch (err) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError(msg ?? 'Gagal mengubah status. Coba lagi.');
     } finally {
       setSaving(false);
     }
@@ -119,13 +134,48 @@ export default function AdminOrderDetailPage() {
               </p>
             </address>
             {order.shipments && order.shipments.length > 0 && (
-              <div className="mt-4 space-y-2">
-                {order.shipments.map((s) => (
-                  <p key={s.id} className="text-sm text-gray-600">
-                    {s.carrier && <span className="font-medium">{s.carrier} · </span>}
-                    Resi: {s.tracking_number ?? '—'}
-                  </p>
-                ))}
+              <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
+                  Shipment ({order.shipments.length})
+                </p>
+                {order.shipments.map((s) => {
+                  const trackUrl = getCourierTrackUrl(s.courier, s.tracking_number);
+                  return (
+                    <div key={s.id} className="rounded-lg bg-greeva-mint-light/40 p-3 text-sm">
+                      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                        {s.courier && (
+                          <span className="font-medium text-greeva-forest-dark">
+                            {s.courier}
+                            {s.courier_service && (
+                              <span className="font-normal text-gray-500">
+                                {' '}({s.courier_service})
+                              </span>
+                            )}
+                          </span>
+                        )}
+                        <span className="text-gray-500">·</span>
+                        <span className="font-mono text-greeva-black">
+                          {s.tracking_number ?? '— belum ada resi'}
+                        </span>
+                        {trackUrl && (
+                          <a
+                            href={trackUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-greeva-starbucks-green hover:underline"
+                          >
+                            Lacak ↗
+                          </a>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-gray-400">
+                        Status: {s.status}
+                        {s.shipped_at && ` · Dikirim ${new Date(s.shipped_at).toLocaleDateString('id-ID')}`}
+                        {s.delivered_at && ` · Diterima ${new Date(s.delivered_at).toLocaleDateString('id-ID')}`}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -179,12 +229,35 @@ export default function AdminOrderDetailPage() {
               </select>
 
               {newStatus === 'shipped' && (
-                <input
-                  value={trackingNumber}
-                  onChange={(e) => setTrackingNumber(e.target.value)}
-                  placeholder="Nomor resi pengiriman"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-greeva-forest focus:outline-none"
-                />
+                <div className="space-y-2 rounded-lg border border-greeva-mint p-3">
+                  <p className="text-xs font-medium uppercase tracking-wider text-greeva-forest-dark">
+                    Info Pengiriman
+                  </p>
+                  <select
+                    value={courier}
+                    onChange={(e) => setCourier(e.target.value)}
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-greeva-forest focus:outline-none"
+                  >
+                    {COURIERS.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={courierService}
+                    onChange={(e) => setCourierService(e.target.value)}
+                    placeholder="Layanan (REG, YES, dll — opsional)"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-greeva-forest focus:outline-none"
+                  />
+                  <input
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    placeholder="Nomor resi *"
+                    required
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-greeva-forest focus:outline-none"
+                  />
+                </div>
               )}
 
               <button

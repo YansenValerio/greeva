@@ -9,6 +9,7 @@ import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { StarRating } from '@/components/reviews/StarRating';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
+import { getCourierTrackUrl } from '@/lib/shipping';
 import { getOrder } from '@/lib/api/orders';
 import { useAuthStore } from '@/stores/auth.store';
 import { useHydrated } from '@/hooks/useHydrated';
@@ -151,6 +152,84 @@ export default function OrderDetailPage() {
                 ))}
               </div>
             </div>
+
+            {/* Tracking / Shipment info */}
+            {order.shipments && order.shipments.some((s) => s.tracking_number) && (
+              <div className="rounded-card bg-white p-6 shadow-card">
+                <h2 className="mb-4 text-h3 font-semibold text-greeva-black">Pelacakan Pengiriman</h2>
+                <div className="space-y-3">
+                  {order.shipments
+                    .filter((s) => s.tracking_number)
+                    .map((s) => {
+                      const trackUrl = getCourierTrackUrl(s.courier, s.tracking_number);
+                      return (
+                        <div
+                          key={s.id}
+                          className="rounded-lg bg-greeva-mint-light/50 p-4"
+                        >
+                          <div className="flex flex-wrap items-baseline justify-between gap-2">
+                            <div>
+                              <p className="text-xs uppercase tracking-wider text-greeva-forest-dark/70">
+                                Kurir
+                              </p>
+                              <p className="text-sm font-semibold text-greeva-forest-dark">
+                                {s.courier ?? '—'}
+                                {s.courier_service && (
+                                  <span className="font-normal text-gray-600">
+                                    {' '}({s.courier_service})
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                            {trackUrl && (
+                              <a
+                                href={trackUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="rounded-pill border border-greeva-forest px-3 py-1 text-xs font-medium text-greeva-forest hover:bg-white transition-colors"
+                              >
+                                Lacak di situs kurir ↗
+                              </a>
+                            )}
+                          </div>
+                          <div className="mt-3 border-t border-greeva-mint/40 pt-3">
+                            <p className="text-xs uppercase tracking-wider text-greeva-forest-dark/70">
+                              Nomor Resi
+                            </p>
+                            <p className="mt-1 select-all font-mono text-base font-semibold text-greeva-black">
+                              {s.tracking_number}
+                            </p>
+                          </div>
+                          {(s.shipped_at || s.delivered_at) && (
+                            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-greeva-forest-dark/70">
+                              {s.shipped_at && (
+                                <span>
+                                  Dikirim:{' '}
+                                  {new Date(s.shipped_at).toLocaleDateString('id-ID', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  })}
+                                </span>
+                              )}
+                              {s.delivered_at && (
+                                <span>
+                                  Diterima:{' '}
+                                  {new Date(s.delivered_at).toLocaleDateString('id-ID', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  })}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
 
             {/* Shipping address */}
             <div className="rounded-card bg-white p-6 shadow-card">

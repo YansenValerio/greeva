@@ -21,9 +21,14 @@ export interface OrderItem {
 
 export interface OrderShipment {
   id: number;
+  partner_id: number | null;
   tracking_number: string | null;
-  carrier: string | null;
+  courier: string | null;
+  courier_service: string | null;
   status: string;
+  packed_at: string | null;
+  shipped_at: string | null;
+  delivered_at: string | null;
 }
 
 export interface Order {

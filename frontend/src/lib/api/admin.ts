@@ -33,6 +33,9 @@ export interface AdminUpdateProductStatusPayload {
 export interface AdminUpdateOrderStatusPayload {
   status: string;
   tracking_number?: string;
+  courier?: string;
+  courier_service?: string;
+  note?: string;
 }
 
 export interface AdminStorePartnerPayload {
