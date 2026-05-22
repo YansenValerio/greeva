@@ -11,7 +11,7 @@ import { StarRating } from '@/components/reviews/StarRating';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { OrderTimeline } from '@/components/orders/OrderTimeline';
 import { getCourierTrackUrl } from '@/lib/shipping';
-import { getOrder } from '@/lib/api/orders';
+import { getOrder, cancelOrder } from '@/lib/api/orders';
 import { useAuthStore } from '@/stores/auth.store';
 import { useHydrated } from '@/hooks/useHydrated';
 import type { Order, OrderItem } from '@/types/order';
@@ -39,6 +39,11 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [reviewingItemId, setReviewingItemId] = useState<number | null>(null);
+
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
 
   useEffect(() => {
     if (!hydrated) return;
@@ -293,6 +298,80 @@ export default function OrderDetailPage() {
                 >
                   Selesaikan Pembayaran
                 </a>
+              )}
+
+              {/* Cancel order */}
+              {order.can_be_cancelled && !cancelOpen && (
+                <button
+                  onClick={() => setCancelOpen(true)}
+                  className="mt-3 block w-full rounded-pill border border-red-200 py-2.5 text-center text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  Batalkan Pesanan
+                </button>
+              )}
+
+              {cancelOpen && (
+                <div className="mt-5 rounded-lg border border-red-200 bg-red-50/60 p-4">
+                  <p className="mb-2 text-sm font-semibold text-red-900">
+                    Yakin ingin membatalkan?
+                  </p>
+                  <p className="mb-3 text-xs text-red-700">
+                    Stok produk akan dikembalikan
+                    {order.status === 'paid' || order.status === 'packing'
+                      ? '. Dana yang sudah dibayar akan di-refund dalam 3–7 hari kerja.'
+                      : '.'}
+                  </p>
+                  <textarea
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    placeholder="Alasan (opsional)"
+                    rows={2}
+                    maxLength={500}
+                    disabled={cancelling}
+                    className="mb-3 w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm focus:border-red-400 focus:outline-none disabled:opacity-50"
+                  />
+                  {cancelError && (
+                    <p className="mb-2 text-xs text-red-700">{cancelError}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        setCancelling(true);
+                        setCancelError('');
+                        try {
+                          const updated = await cancelOrder(
+                            order.order_number,
+                            cancelReason.trim() || undefined,
+                          );
+                          setOrder(updated);
+                          setCancelOpen(false);
+                          setCancelReason('');
+                        } catch (e) {
+                          const msg = (e as { response?: { data?: { message?: string } } })
+                            ?.response?.data?.message;
+                          setCancelError(msg ?? 'Gagal membatalkan pesanan.');
+                        } finally {
+                          setCancelling(false);
+                        }
+                      }}
+                      disabled={cancelling}
+                      className="flex-1 rounded-pill bg-red-600 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+                    >
+                      {cancelling ? 'Membatalkan...' : 'Ya, batalkan'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCancelOpen(false);
+                        setCancelReason('');
+                        setCancelError('');
+                      }}
+                      disabled={cancelling}
+                      className="flex-1 rounded-pill border border-gray-200 bg-white py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Jangan jadi
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>

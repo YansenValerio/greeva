@@ -20,6 +20,7 @@ class OrderResource extends JsonResource
             'order_number'    => $this->order_number,
             'status'          => $this->status->value,
             'status_label'    => $this->status->label(),
+            'can_be_cancelled' => $this->canBeCancelled(),
 
             'subtotal'                => $this->subtotal,
             'subtotal_formatted'      => Money::format($this->subtotal),

@@ -168,6 +168,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware('role:buyer,admin')->prefix('orders')->group(function () {
             Route::get('/', [Buyer\OrderController::class, 'index']);
             Route::get('{orderNumber}', [Buyer\OrderController::class, 'show']);
+            Route::post('{orderNumber}/cancel', [Buyer\OrderController::class, 'cancel']);
         });
 
         // Product reviews (buyer create; owner/admin update & delete)

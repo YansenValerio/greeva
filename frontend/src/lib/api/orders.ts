@@ -19,3 +19,14 @@ export async function getOrder(orderNumber: string): Promise<Order> {
   const { data } = await client.get<ApiItem<Order>>(`/orders/${orderNumber}`);
   return data.data;
 }
+
+export async function mockPay(orderNumber: string): Promise<void> {
+  await client.post(`/dev/mock-pay/${orderNumber}`);
+}
+
+export async function cancelOrder(orderNumber: string, reason?: string): Promise<Order> {
+  const { data } = await client.post<ApiItem<Order>>(`/orders/${orderNumber}/cancel`, {
+    reason: reason ?? null,
+  });
+  return data.data;
+}

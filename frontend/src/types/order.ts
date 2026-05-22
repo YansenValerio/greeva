@@ -36,6 +36,7 @@ export interface Order {
   order_number: string;
   status: string;
   status_label: string;
+  can_be_cancelled: boolean;
   subtotal: number;
   subtotal_formatted: string;
   shipping_total: number;
