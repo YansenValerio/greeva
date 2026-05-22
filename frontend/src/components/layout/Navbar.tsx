@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, LogOut, User } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ShoppingBag, LogOut, User, Search, X } from 'lucide-react';
 import { Container } from '@/components/shared/Container';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
@@ -12,6 +13,40 @@ import { logout as logoutApi } from '@/lib/api/auth';
 export function Navbar() {
   const router = useRouter();
   const hydrated = useHydrated();
+  const [scrolled, setScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (searchOpen) {
+      searchInputRef.current?.focus();
+    } else {
+      setSearchQuery('');
+    }
+  }, [searchOpen]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSearchOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+    }
+  }
 
   const { isAuthenticated, user, logout } = useAuthStore();
   const { count, reset: resetCart } = useCartStore();
@@ -28,7 +63,40 @@ export function Navbar() {
   };
 
   return (
-    <header className="bg-greeva-emerald text-white">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 text-white transition-all duration-300 ${
+        scrolled ? 'bg-greeva-emerald shadow-sm' : 'bg-transparent'
+      }`}
+    >
+      {/* Search overlay */}
+      {searchOpen && (
+        <div
+          className="absolute inset-0 flex items-center bg-greeva-emerald px-4"
+          role="search"
+        >
+          <Container className="flex w-full items-center gap-3">
+            <Search className="h-5 w-5 flex-shrink-0 text-white/60" />
+            <form onSubmit={handleSearchSubmit} className="flex-1">
+              <input
+                ref={searchInputRef}
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari produk, material, brand..."
+                aria-label="Cari produk"
+                className="w-full bg-transparent text-base text-white placeholder-white/50 focus:outline-none"
+              />
+            </form>
+            <button
+              onClick={() => setSearchOpen(false)}
+              aria-label="Tutup pencarian"
+              className="rounded-full p-1.5 text-white/70 hover:text-white transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </Container>
+        </div>
+      )}
       <Container>
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -48,15 +116,36 @@ export function Navbar() {
               Toko
             </Link>
             <Link
+              href="/mitra"
+              className="text-sm font-medium text-white/80 hover:text-white transition-colors"
+            >
+              Mitra
+            </Link>
+            <Link
+              href="/cerita"
+              className="text-sm font-medium text-white/80 hover:text-white transition-colors"
+            >
+              Cerita
+            </Link>
+            <Link
               href="/about"
               className="text-sm font-medium text-white/80 hover:text-white transition-colors"
             >
-              Tentang Kami
+              Tentang
             </Link>
           </nav>
 
           {/* Right actions */}
           <div className="flex items-center gap-4">
+            {/* Search */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label="Cari produk"
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+
             {/* Cart */}
             <Link
               href="/cart"

@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { Container } from '@/components/shared/Container';
 import { ProductGrid } from '@/components/catalog/ProductGrid';
 import { CategoryFilter } from '@/components/catalog/CategoryFilter';
+import { SearchBar } from '@/components/catalog/SearchBar';
 import { getProducts } from '@/lib/api/products';
 import { getCategories } from '@/lib/api/categories';
 
@@ -42,6 +43,11 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           <p className="mt-2 text-base text-gray-600">
             Produk brand hijau lokal pilihan — ramah lingkungan, berkualitas.
           </p>
+          <div className="mt-6">
+            <Suspense>
+              <SearchBar />
+            </Suspense>
+          </div>
         </Container>
       </section>
 
@@ -54,6 +60,22 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
               <Suspense>
                 <CategoryFilter categories={categories} />
               </Suspense>
+            </div>
+          )}
+
+          {/* Label hasil pencarian */}
+          {searchParams.search && (
+            <div className="mb-6">
+              <p className="text-sm text-gray-600">
+                Hasil pencarian untuk:{' '}
+                <span className="font-semibold text-greeva-black">
+                  &ldquo;{searchParams.search}&rdquo;
+                </span>
+                {' '}
+                <span className="text-gray-400">
+                  ({productsRes.meta?.total ?? productsRes.data.length} produk)
+                </span>
+              </p>
             </div>
           )}
 
