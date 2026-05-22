@@ -165,7 +165,7 @@ export function Navbar() {
               isAuthenticated ? (
                 <div className="hidden items-center gap-3 md:flex">
                   <Link
-                    href="/orders"
+                    href="/account"
                     className="flex items-center gap-1.5 text-sm text-white/80 hover:text-white transition-colors"
                     aria-label={`Akun ${user?.name}`}
                   >

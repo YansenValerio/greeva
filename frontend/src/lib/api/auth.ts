@@ -20,3 +20,25 @@ export async function getMe(): Promise<User> {
   const { data } = await client.get<ApiItem<User>>('/auth/me');
   return data.data;
 }
+
+export interface UpdateProfilePayload {
+  name?: string;
+  email?: string;
+  phone?: string | null;
+  avatar?: string | null;
+}
+
+export async function updateProfile(payload: UpdateProfilePayload): Promise<User> {
+  const { data } = await client.put<ApiItem<User>>('/auth/profile', payload);
+  return data.data;
+}
+
+export interface ChangePasswordPayload {
+  current_password: string;
+  password: string;
+  password_confirmation: string;
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
+  await client.post('/auth/change-password', payload);
+}
