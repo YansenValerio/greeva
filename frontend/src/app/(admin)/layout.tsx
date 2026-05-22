@@ -6,6 +6,7 @@ import { DashboardShell } from '@/components/dashboard/DashboardShell';
 const ADMIN_NAV = [
   { label: 'Dashboard', href: '/admin/dashboard' },
   { label: 'Produk', href: '/admin/products' },
+  { label: 'Kategori', href: '/admin/categories' },
   { label: 'Pesanan', href: '/admin/orders' },
   { label: 'Mitra', href: '/admin/partners' },
   { label: 'Payout', href: '/admin/payouts' },

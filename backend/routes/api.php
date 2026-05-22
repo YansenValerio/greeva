@@ -62,6 +62,13 @@ Route::prefix('v1')->group(function () {
         // ── Admin ───────────────────────────────────────────────────────────
         Route::middleware('role:admin')->prefix('admin')->group(function () {
 
+            // Category management
+            Route::get('categories', [Admin\CategoryController::class, 'index']);
+            Route::post('categories', [Admin\CategoryController::class, 'store']);
+            Route::get('categories/{category}', [Admin\CategoryController::class, 'show']);
+            Route::put('categories/{category}', [Admin\CategoryController::class, 'update']);
+            Route::delete('categories/{category}', [Admin\CategoryController::class, 'destroy']);
+
             // Partner management
             Route::get('partners', [Admin\PartnerController::class, 'index']);
             Route::post('partners', [Admin\PartnerController::class, 'store']);

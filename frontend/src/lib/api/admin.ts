@@ -3,6 +3,7 @@ import type { ApiCollection, ApiItem } from '@/types/api';
 import type { Partner, PartnerEarning, PayoutBatch } from '@/types/partner';
 import type { Product } from '@/types/product';
 import type { Order } from '@/types/order';
+import type { Category } from '@/types/category';
 
 export interface AdminProductParams {
   page?: number;
@@ -58,6 +59,38 @@ export interface AdminGeneratePayoutPayload {
 export interface AdminMarkPaidPayload {
   payment_proof?: string;
   notes?: string;
+}
+
+// Categories
+export interface AdminCategoryPayload {
+  parent_id?: number | null;
+  name: string;
+  description?: string | null;
+  image?: string | null;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+export async function adminGetCategories(): Promise<Category[]> {
+  const { data } = await client.get<{ data: Category[] }>('/admin/categories');
+  return data.data;
+}
+
+export async function adminCreateCategory(payload: AdminCategoryPayload): Promise<Category> {
+  const { data } = await client.post<ApiItem<Category>>('/admin/categories', payload);
+  return data.data;
+}
+
+export async function adminUpdateCategory(
+  id: number,
+  payload: Partial<AdminCategoryPayload>,
+): Promise<Category> {
+  const { data } = await client.put<ApiItem<Category>>(`/admin/categories/${id}`, payload);
+  return data.data;
+}
+
+export async function adminDeleteCategory(id: number): Promise<void> {
+  await client.delete(`/admin/categories/${id}`);
 }
 
 // Partners
