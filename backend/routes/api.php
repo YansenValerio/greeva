@@ -171,6 +171,15 @@ Route::prefix('v1')->group(function () {
             Route::post('{orderNumber}/cancel', [Buyer\OrderController::class, 'cancel']);
         });
 
+        // Saved addresses (buyer)
+        Route::prefix('addresses')->group(function () {
+            Route::get('/', [Buyer\AddressController::class, 'index']);
+            Route::post('/', [Buyer\AddressController::class, 'store']);
+            Route::put('{address}', [Buyer\AddressController::class, 'update']);
+            Route::delete('{address}', [Buyer\AddressController::class, 'destroy']);
+            Route::patch('{address}/default', [Buyer\AddressController::class, 'setDefault']);
+        });
+
         // Product reviews (buyer create; owner/admin update & delete)
         Route::middleware('role:buyer')->post(
             'orders/{orderNumber}/items/{itemId}/review',

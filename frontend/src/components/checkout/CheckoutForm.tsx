@@ -1,26 +1,76 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import axios from 'axios';
 import { FormField } from '@/components/shared/FormField';
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { checkout } from '@/lib/api/orders';
+import { getAddresses } from '@/lib/api/addresses';
 import { useCartStore } from '@/stores/cart.store';
 import { checkoutSchema, type CheckoutFormData as FormData } from '@/lib/schemas/checkout';
+import type { Address } from '@/types/address';
 
 export function CheckoutForm() {
   const router = useRouter();
   const reset = useCartStore((s) => s.reset);
 
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedId, setSelectedId] = useState<number | 'manual' | null>(null);
+
   const {
     register,
     handleSubmit,
+    setValue,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(checkoutSchema) });
+
+  // Load alamat tersimpan + auto-pilih default
+  useEffect(() => {
+    getAddresses()
+      .then((list) => {
+        setAddresses(list);
+        const def = list.find((a) => a.is_default) ?? list[0];
+        if (def) {
+          setSelectedId(def.id);
+          applyAddress(def);
+        } else {
+          setSelectedId('manual');
+        }
+      })
+      .catch(() => {
+        setSelectedId('manual');
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function applyAddress(a: Address) {
+    setValue('shipping_name', a.recipient_name, { shouldValidate: true });
+    setValue('shipping_phone', a.phone, { shouldValidate: true });
+    setValue('shipping_address', a.address, { shouldValidate: true });
+    setValue('shipping_province', a.province, { shouldValidate: true });
+    setValue('shipping_city', a.city, { shouldValidate: true });
+    setValue('shipping_district', a.district ?? '', { shouldValidate: true });
+    setValue('shipping_postal_code', a.postal_code, { shouldValidate: true });
+  }
+
+  function handleSelect(value: string) {
+    if (value === 'manual') {
+      setSelectedId('manual');
+      return;
+    }
+    const id = Number(value);
+    const addr = addresses.find((a) => a.id === id);
+    if (addr) {
+      setSelectedId(id);
+      applyAddress(addr);
+    }
+  }
 
   const onSubmit = async (values: FormData) => {
     try {
@@ -31,6 +81,12 @@ export function CheckoutForm() {
       });
 
       const { snap_token, data: order } = result;
+
+      if (snap_token.startsWith('GREEVA_MOCK_')) {
+        reset();
+        router.push(`/mock-payment/${order.order_number}`);
+        return;
+      }
 
       window.snap.pay(snap_token, {
         onSuccess: () => {
@@ -65,7 +121,39 @@ export function CheckoutForm() {
       )}
 
       <div>
-        <h2 className="mb-4 text-h3 font-semibold text-greeva-black">Alamat Pengiriman</h2>
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-h3 font-semibold text-greeva-black">Alamat Pengiriman</h2>
+          <Link
+            href="/account/addresses"
+            className="text-xs text-greeva-starbucks-green hover:underline"
+          >
+            Kelola alamat tersimpan →
+          </Link>
+        </div>
+
+        {/* Saved address selector */}
+        {addresses.length > 0 && (
+          <div className="mb-5 rounded-lg border border-greeva-mint bg-greeva-mint-light/30 p-4">
+            <label className="mb-2 block text-sm font-medium text-greeva-forest-dark">
+              Pilih dari alamat tersimpan
+            </label>
+            <select
+              value={selectedId ?? ''}
+              onChange={(e) => handleSelect(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-greeva-forest focus:outline-none"
+            >
+              {addresses.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.label ? `[${a.label}] ` : ''}
+                  {a.recipient_name} — {a.city}
+                  {a.is_default ? ' (default)' : ''}
+                </option>
+              ))}
+              <option value="manual">— Pakai alamat baru —</option>
+            </select>
+          </div>
+        )}
+
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField label="Nama Penerima" error={errors.shipping_name?.message} required>
