@@ -12,6 +12,7 @@ import {
   adminMarkPayoutProcessing,
   adminCancelPayout,
 } from '@/lib/api/admin';
+import { toast, confirm } from '@/lib/feedback';
 import type { PayoutBatch } from '@/types/partner';
 
 const STATUS_BADGE: Record<string, 'green' | 'amber' | 'gray'> = {
@@ -80,14 +81,23 @@ export default function AdminPayoutDetailPage() {
   }
 
   async function handleCancel() {
-    if (!batch || !confirm('Batalkan payout ini? Earning akan dikembalikan ke status available.')) return;
+    if (!batch) return;
+    const ok = await confirm({
+      title: 'Batalkan payout?',
+      message: 'Earning di dalam batch akan dikembalikan ke status available.',
+      confirmText: 'Batalkan',
+      danger: true,
+    });
+    if (!ok) return;
     setSaving(true);
     setError('');
     try {
       const updated = await adminCancelPayout(batch.id);
       setBatch(updated);
+      toast.success('Payout dibatalkan.');
     } catch {
       setError('Gagal membatalkan payout.');
+      toast.error('Gagal membatalkan payout.');
     } finally {
       setSaving(false);
     }

@@ -10,6 +10,7 @@ import {
   adminDeleteCategory,
   type AdminCategoryPayload,
 } from '@/lib/api/admin';
+import { toast, confirm } from '@/lib/feedback';
 import type { Category } from '@/types/category';
 
 interface FormState {
@@ -98,8 +99,10 @@ export default function AdminCategoriesPage() {
     try {
       if (editingId) {
         await adminUpdateCategory(editingId, payload);
+        toast.success('Kategori berhasil diperbarui.');
       } else {
         await adminCreateCategory(payload);
+        toast.success('Kategori baru ditambahkan.');
       }
       resetForm();
       await loadCategories();
@@ -113,15 +116,22 @@ export default function AdminCategoriesPage() {
   }
 
   async function handleDelete(category: Category) {
-    if (!confirm(`Hapus kategori "${category.name}"?`)) return;
+    const ok = await confirm({
+      title: 'Hapus kategori?',
+      message: `Kategori "${category.name}" akan dihapus permanen. Pastikan tidak ada produk atau subkategori yang masih menggunakannya.`,
+      confirmText: 'Hapus',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await adminDeleteCategory(category.id);
+      toast.success('Kategori dihapus.');
       await loadCategories();
       if (editingId === category.id) resetForm();
     } catch (err) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      alert(msg ?? 'Gagal menghapus kategori.');
+      toast.error(msg ?? 'Gagal menghapus kategori.');
     }
   }
 

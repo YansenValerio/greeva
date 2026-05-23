@@ -13,6 +13,7 @@ import {
   deleteAddress,
   setDefaultAddress,
 } from '@/lib/api/addresses';
+import { toast, confirm } from '@/lib/feedback';
 import type { Address, AddressPayload } from '@/types/address';
 
 interface FormState {
@@ -124,8 +125,10 @@ export default function AccountAddressesPage() {
     try {
       if (editingId) {
         await updateAddress(editingId, payload);
+        toast.success('Alamat berhasil diperbarui.');
       } else {
         await createAddress(payload);
+        toast.success('Alamat baru ditambahkan.');
       }
       resetForm();
       await load();
@@ -138,22 +141,30 @@ export default function AccountAddressesPage() {
   }
 
   async function handleDelete(addr: Address) {
-    if (!confirm(`Hapus alamat "${addr.label ?? addr.recipient_name}"?`)) return;
+    const ok = await confirm({
+      title: 'Hapus alamat?',
+      message: `Alamat "${addr.label ?? addr.recipient_name}" akan dihapus permanen.`,
+      confirmText: 'Hapus',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await deleteAddress(addr.id);
+      toast.success('Alamat dihapus.');
       await load();
     } catch (err) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      alert(msg ?? 'Gagal menghapus alamat.');
+      toast.error(msg ?? 'Gagal menghapus alamat.');
     }
   }
 
   async function handleSetDefault(addr: Address) {
     try {
       await setDefaultAddress(addr.id);
+      toast.success('Alamat default berhasil diubah.');
       await load();
     } catch {
-      alert('Gagal menetapkan default.');
+      toast.error('Gagal menetapkan default.');
     }
   }
 

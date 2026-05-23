@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
+import { Toaster } from '@/components/feedback/Toaster';
+import { ConfirmDialog } from '@/components/feedback/ConfirmDialog';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -29,6 +31,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="id" className={inter.variable}>
       <body>
         <Providers>{children}</Providers>
+        <Toaster />
+        <ConfirmDialog />
       </body>
     </html>
   );

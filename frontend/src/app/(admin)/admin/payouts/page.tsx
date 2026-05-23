@@ -13,6 +13,7 @@ import {
   type AdminGeneratePayoutPayload,
 } from '@/lib/api/admin';
 import { adminGetPartners } from '@/lib/api/admin';
+import { toast, confirm } from '@/lib/feedback';
 import type { PayoutBatch, Partner } from '@/types/partner';
 
 const STATUS_BADGE: Record<string, 'green' | 'amber' | 'gray'> = {
@@ -53,8 +54,10 @@ export default function AdminPayoutsPage() {
       setPayouts((prev) => [batch, ...prev]);
       setShowForm(false);
       setForm({ partner_id: 0, period_start: '', period_end: '' });
-    } catch {
-      alert('Gagal generate payout. Coba lagi.');
+      toast.success(`Payout ${batch.payout_number} berhasil dibuat.`);
+    } catch (err) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg ?? 'Gagal generate payout. Coba lagi.');
     } finally {
       setGenerating(false);
     }
@@ -65,17 +68,29 @@ export default function AdminPayoutsPage() {
     try {
       const updated = await adminMarkPayoutProcessing(id);
       setPayouts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      toast.success('Payout ditandai sedang diproses.');
+    } catch {
+      toast.error('Gagal mengubah status payout.');
     } finally {
       setActionId(null);
     }
   }
 
   async function handleCancel(id: number) {
-    if (!confirm('Batalkan payout ini?')) return;
+    const ok = await confirm({
+      title: 'Batalkan payout?',
+      message: 'Earning di dalam batch akan dikembalikan ke status available.',
+      confirmText: 'Batalkan',
+      danger: true,
+    });
+    if (!ok) return;
     setActionId(id);
     try {
       const updated = await adminCancelPayout(id);
       setPayouts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      toast.success('Payout dibatalkan.');
+    } catch {
+      toast.error('Gagal membatalkan payout.');
     } finally {
       setActionId(null);
     }

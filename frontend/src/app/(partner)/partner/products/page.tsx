@@ -6,6 +6,7 @@ import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { getPartnerProducts, submitPartnerProduct, deletePartnerProduct } from '@/lib/api/partner';
+import { toast, confirm } from '@/lib/feedback';
 import type { Product } from '@/types/product';
 
 const STATUS_BADGE: Record<string, 'green' | 'amber' | 'gray'> = {
@@ -42,11 +43,22 @@ export default function PartnerProductsPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Hapus produk ini?')) return;
+    const product = products.find((p) => p.id === id);
+    const ok = await confirm({
+      title: 'Hapus produk?',
+      message: `"${product?.name ?? 'Produk ini'}" akan dihapus. Hanya produk berstatus draf atau nonaktif yang dapat dihapus.`,
+      confirmText: 'Hapus',
+      danger: true,
+    });
+    if (!ok) return;
     setDeleting(id);
     try {
       await deletePartnerProduct(id);
       setProducts((prev) => prev.filter((p) => p.id !== id));
+      toast.success('Produk dihapus.');
+    } catch (err) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg ?? 'Gagal menghapus produk.');
     } finally {
       setDeleting(null);
     }
