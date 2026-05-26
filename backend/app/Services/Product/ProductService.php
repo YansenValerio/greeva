@@ -8,12 +8,18 @@ use App\Enums\ProductStatus;
 use App\Models\Partner;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Services\Inventory\InventoryService;
 use App\Support\AuditLogger;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ProductService
 {
+    public function __construct(
+        private readonly InventoryService $inventoryService,
+    ) {}
+
     // ── Public browse ────────────────────────────────────────────────────────
 
     public function listPublic(array $filters): LengthAwarePaginator
@@ -250,6 +256,25 @@ class ProductService
         return $product;
     }
 
+    /**
+     * Ubah status banyak produk sekaligus (kurasi massal).
+     *
+     * @param  array<int, int>  $ids
+     * @return int  Jumlah produk yang berhasil diubah
+     */
+    public function bulkUpdateStatus(array $ids, ProductStatus $status, ?string $note = null): int
+    {
+        return DB::transaction(function () use ($ids, $status, $note) {
+            $products = Product::whereIn('id', $ids)->get();
+
+            foreach ($products as $product) {
+                $this->updateStatus($product, $status, $note);
+            }
+
+            return $products->count();
+        });
+    }
+
     // ── Variants ─────────────────────────────────────────────────────────────
 
     public function addVariant(Product $product, array $data): ProductVariant
@@ -258,16 +283,22 @@ class ProductService
 
         AuditLogger::log('created', $variant, [], $variant->toArray());
 
+        $variant->setRelation('product', $product);
+        $this->inventoryService->logInitialStock($variant);
+
         return $variant;
     }
 
     public function updateVariant(ProductVariant $variant, array $data): ProductVariant
     {
-        $old = $variant->only(['sku', 'name', 'price', 'stock', 'is_active']);
+        $old        = $variant->only(['sku', 'name', 'price', 'stock', 'is_active']);
+        $stockOld   = $variant->stock;
 
         $variant->update($data);
 
         AuditLogger::log('updated', $variant, $old, $variant->fresh()->only(array_keys($old)));
+
+        $this->inventoryService->logManualAdjustment($variant, $stockOld, $variant->stock);
 
         return $variant->fresh();
     }

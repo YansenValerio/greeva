@@ -4,6 +4,13 @@ import type { Partner, PartnerEarning, PayoutBatch } from '@/types/partner';
 import type { Product } from '@/types/product';
 import type { Order } from '@/types/order';
 import type { Category } from '@/types/category';
+import type { AdminDashboard } from '@/types/admin';
+
+// Dashboard
+export async function adminGetDashboard(): Promise<AdminDashboard> {
+  const { data } = await client.get<ApiItem<AdminDashboard>>('/admin/dashboard');
+  return data.data;
+}
 
 export interface AdminProductParams {
   page?: number;
@@ -144,6 +151,22 @@ export async function adminUpdateProductStatus(
   return data.data;
 }
 
+export interface AdminBulkProductStatusPayload {
+  product_ids: number[];
+  status: string;
+  note?: string;
+}
+
+export async function adminBulkUpdateProductStatus(
+  payload: AdminBulkProductStatusPayload,
+): Promise<{ updated: number }> {
+  const { data } = await client.patch<{ data: { updated: number }; message: string }>(
+    '/admin/products/bulk-status',
+    payload,
+  );
+  return data.data;
+}
+
 // Orders
 export async function adminGetOrders(params?: AdminOrderParams): Promise<ApiCollection<Order>> {
   const { data } = await client.get<ApiCollection<Order>>('/admin/orders', { params });
@@ -160,6 +183,22 @@ export async function adminUpdateOrderStatus(
   payload: AdminUpdateOrderStatusPayload,
 ): Promise<Order> {
   const { data } = await client.patch<ApiItem<Order>>(`/admin/orders/${id}/status`, payload);
+  return data.data;
+}
+
+export interface AdminBulkOrderStatusResult {
+  updated: string[];
+  failed: { order_number: string; reason: string }[];
+}
+
+export async function adminBulkUpdateOrderStatus(payload: {
+  order_ids: number[];
+  status: string;
+}): Promise<AdminBulkOrderStatusResult> {
+  const { data } = await client.patch<{ data: AdminBulkOrderStatusResult; message: string }>(
+    '/admin/orders/bulk-status',
+    payload,
+  );
   return data.data;
 }
 

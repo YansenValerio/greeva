@@ -50,6 +50,9 @@ beforeEach(function () {
     $this->midtransMock = $this->mock(MidtransService::class);
     $this->cartMock     = $this->mock(CartService::class);
 
+    // Default: gunakan jalur Midtrans asli (bukan mock-payment dev)
+    $this->midtransMock->shouldReceive('isMockMode')->andReturn(false)->byDefault();
+
     $this->service = app(CheckoutService::class);
 });
 

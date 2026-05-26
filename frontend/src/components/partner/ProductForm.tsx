@@ -6,18 +6,20 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { getCategories } from '@/lib/api/categories';
 import { generateProductCopy } from '@/lib/api/ai';
+import { ImageUploader } from '@/components/partner/ImageUploader';
 import type { Category } from '@/types/category';
 
 const schema = z.object({
   name: z.string().min(1, 'Nama produk wajib diisi'),
   short_description: z.string().optional(),
-  description: z.string().optional(),
+  description: z.string().min(1, 'Deskripsi produk wajib diisi.'),
   price: z.coerce.number().min(1, 'Harga wajib diisi'), // rupiah di form, konversi ke sen saat submit
   compare_price: z.coerce.number().optional().nullable(),
   category_id: z.coerce.number().min(1, 'Kategori wajib dipilih'),
   weight: z.coerce.number().min(1, 'Berat wajib diisi'),
   material: z.string().optional(),
   sustainability_notes: z.string().optional(),
+  images: z.array(z.string()).optional(),
 });
 
 export type ProductFormValues = z.infer<typeof schema>;
@@ -57,6 +59,7 @@ export function ProductForm({
   });
 
   const productName = watch('name');
+  const images = watch('images') ?? [];
 
   async function handleGenerateCopy() {
     const name = getValues('name');
@@ -226,13 +229,16 @@ export function ProductForm({
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-greeva-black">Deskripsi</label>
+        <label className="mb-1.5 block text-sm font-medium text-greeva-black">
+          Deskripsi <span className="text-red-500">*</span>
+        </label>
         <textarea
           {...register('description')}
           rows={6}
           className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm focus:border-greeva-forest focus:outline-none focus:ring-2 focus:ring-greeva-leaf/40"
           placeholder="Deskripsi lengkap produk..."
         />
+        {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description.message}</p>}
       </div>
 
       <div>
@@ -244,6 +250,17 @@ export function ProductForm({
           rows={3}
           className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm focus:border-greeva-forest focus:outline-none focus:ring-2 focus:ring-greeva-leaf/40"
           placeholder="Dibuat dari 100% plastik HDPE daur ulang..."
+        />
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-greeva-black">
+          Foto Produk
+        </label>
+        <ImageUploader
+          value={images}
+          onChange={(urls) => setValue('images', urls, { shouldDirty: true })}
+          max={5}
         />
       </div>
 

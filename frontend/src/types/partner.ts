@@ -42,6 +42,55 @@ export interface PartnerEarning {
   };
 }
 
+export type InventoryReason = 'sale' | 'release' | 'adjustment' | 'initial';
+
+export interface InventoryLog {
+  id: number;
+  product_variant_id: number;
+  product_id: number | null;
+  order_id: number | null;
+  change: number;
+  stock_before: number;
+  stock_after: number;
+  reason: InventoryReason;
+  reason_label: string;
+  note: string | null;
+  created_at: string;
+  product_name?: string | null;
+  variant_name?: string | null;
+  sku?: string | null;
+  order_number?: string | null;
+}
+
+export interface AnalyticsSummary {
+  units_sold: number;
+  gross_sales: number; // sen
+  total_orders: number;
+  total_earnings: number; // sen
+  active_products: number;
+  low_stock_variants: number;
+}
+
+export interface AnalyticsTopProduct {
+  product_id: number | null;
+  name: string;
+  units_sold: number;
+  gross_sales: number; // sen
+}
+
+export interface AnalyticsMonthlyPoint {
+  month: string; // YYYY-MM
+  units_sold: number;
+  gross_sales: number; // sen
+  orders: number;
+}
+
+export interface PartnerAnalytics {
+  summary: AnalyticsSummary;
+  top_products: AnalyticsTopProduct[];
+  monthly_trend: AnalyticsMonthlyPoint[];
+}
+
 export interface PayoutBatch {
   id: number;
   payout_number: string;

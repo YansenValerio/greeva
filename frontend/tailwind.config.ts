@@ -76,6 +76,17 @@ const config: Config = {
         card: '0 1px 3px rgba(0,0,0,0.08)',
         'card-hover': '0 4px 12px rgba(0,0,0,0.12)',
       },
+
+      // ── Keyframes & Animation ─────────────────────────────────────────────
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+      },
+      animation: {
+        marquee: 'marquee 28s linear infinite',
+      },
     },
   },
   plugins: [forms],

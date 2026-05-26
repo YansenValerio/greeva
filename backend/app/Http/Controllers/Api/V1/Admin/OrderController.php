@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\AdminUpdateOrderStatusRequest;
+use App\Http\Requests\Order\BulkUpdateStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Services\Order\OrderService;
@@ -26,7 +27,7 @@ class OrderController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Order::with(['items:id,order_id,product_name,quantity,subtotal'])
+        $query = Order::with(['items'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -80,6 +81,34 @@ class OrderController extends Controller
         return response()->json([
             'data'    => OrderResource::make($updated),
             'message' => "Status order diubah ke \"{$newStatus->label()}\".",
+        ]);
+    }
+
+    /**
+     * PATCH /api/v1/admin/orders/bulk-status
+     * Ubah status banyak order sekaligus. Order yang transisinya tidak valid
+     * dilewati dan dilaporkan, sisanya tetap diproses.
+     */
+    public function bulkUpdateStatus(BulkUpdateStatusRequest $request): JsonResponse
+    {
+        $newStatus = OrderStatus::from($request->validated('status'));
+
+        $result = $this->orderService->bulkUpdateStatus(
+            $request->validated('order_ids'),
+            $newStatus,
+        );
+
+        $updatedCount = count($result['updated']);
+        $failedCount  = count($result['failed']);
+
+        $message = "{$updatedCount} pesanan diubah ke \"{$newStatus->label()}\".";
+        if ($failedCount > 0) {
+            $message .= " {$failedCount} pesanan dilewati (transisi tidak valid).";
+        }
+
+        return response()->json([
+            'data'    => $result,
+            'message' => $message,
         ]);
     }
 }

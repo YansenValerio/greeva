@@ -211,8 +211,24 @@ pnpm dev                   # http://localhost:3000
 - [x] UX: `AddToCartButton` tidak lagi redirect ke login — guest langsung bisa belanja, login baru required saat checkout. Cart page accessible tanpa auth, tombol checkout adaptif ("Lanjut ke Checkout" vs "Masuk untuk Checkout")
 - [x] Navbar auto-fetch cart saat hydrated untuk auth user atau guest yang sudah punya token — badge count konsisten antar reload
 
+### Step 17 — Partner Analytics & Inventory History ✅
+- [x] Migration `inventory_logs` + `InventoryReason` enum (sale/release/adjustment/initial) + `InventoryLog` model — catat setiap mutasi stok dengan `stock_before`/`stock_after` + referensi order
+- [x] `InventoryService` di-wire ke semua titik mutasi stok: checkout (sale), kegagalan Midtrans & pembatalan order & payment-failed listener (release), buat varian (initial), edit stok varian (adjustment manual)
+- [x] `PartnerAnalyticsService` + `GET /partner/analytics` — KPI (unit terjual, penjualan kotor, total pesanan, pendapatan, produk aktif, stok menipis), produk terlaris, tren 6 bulan (driver-aware Postgres/SQLite)
+- [x] `GET /partner/inventory-logs` (filter `product_id`/`variant_id`/`reason`) + `InventoryLogResource`
+- [x] Halaman `/partner/analytics` (KPI cards + bar chart tren tanpa dependency + produk terlaris) & `/partner/inventory` (filter produk + alasan, tampilan +/- dan before→after). Nav mitra: "Analitik" + "Riwayat Stok"
+- [x] Tes: `InventoryServiceTest` (7) + `PartnerAnalyticsServiceTest` (4)
+
+### Step 18 — Admin Dashboard KPI & Bulk Operations ✅
+- [x] `AdminDashboardService` + `GET /admin/dashboard` — revenue bulan ini vs bulan lalu (+ % & tren 6 bulan), order perlu dikirim / menunggu bayar, payout berjalan + earning siap dicairkan, top mitra, top kategori, peringatan stok menipis lintas mitra
+- [x] `/admin/dashboard` dirombak dari quick-links jadi KPI headline cards + bar chart revenue + top mitra/kategori + daftar stok menipis (link ke produk) + quick links
+- [x] Bulk ops: `PATCH /admin/products/bulk-status` (aktifkan/nonaktifkan/arsipkan massal) + `PATCH /admin/orders/bulk-status` (packing/delivered/completed/cancelled massal; transisi tidak valid dilewati & dilaporkan, bukan menggagalkan batch; `shipped` dikecualikan karena butuh resi per-order)
+- [x] UI bulk: checkbox per baris + pilih semua + bulk action bar (dropdown status + Terapkan) di halaman admin Produk & Pesanan, dengan confirm dialog + toast
+- [x] Catatan: conversion rate & traffic (#19) dan bulk message ke buyer (#27) di-skip — butuh sistem pelacakan view & messaging broadcast yang belum ada
+- [x] Tes: `AdminDashboardServiceTest` (6) + `BulkStatusUpdateTest` (3). Total backend: 77 tes hijau
+
 ### Backlog
-- [ ] _(kosong — semua fitur core selesai)_
+- [ ] _(lihat [IMPROVEMENTS.md](IMPROVEMENTS.md) untuk daftar peningkatan lanjutan)_
 
 ---
 

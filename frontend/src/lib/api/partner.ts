@@ -1,6 +1,14 @@
 import { client } from './client';
 import type { ApiCollection, ApiItem } from '@/types/api';
-import type { Partner, PartnerEarning, EarningSummary, PayoutBatch } from '@/types/partner';
+import type {
+  Partner,
+  PartnerEarning,
+  EarningSummary,
+  PayoutBatch,
+  PartnerAnalytics,
+  InventoryLog,
+  InventoryReason,
+} from '@/types/partner';
 import type { Product } from '@/types/product';
 
 export interface PartnerProductParams {
@@ -108,4 +116,64 @@ export async function getPartnerPayouts(params?: {
 export async function getPartnerPayout(id: number): Promise<PayoutBatch> {
   const { data } = await client.get<ApiItem<PayoutBatch>>(`/partner/payouts/${id}`);
   return data.data;
+}
+
+// Analytics
+export async function getPartnerAnalytics(): Promise<PartnerAnalytics> {
+  const { data } = await client.get<ApiItem<PartnerAnalytics>>('/partner/analytics');
+  return data.data;
+}
+
+// Inventory history
+export interface InventoryLogParams {
+  page?: number;
+  per_page?: number;
+  product_id?: number;
+  variant_id?: number;
+  reason?: InventoryReason;
+}
+
+export async function getPartnerInventoryLogs(
+  params?: InventoryLogParams,
+): Promise<ApiCollection<InventoryLog>> {
+  const { data } = await client.get<ApiCollection<InventoryLog>>('/partner/inventory-logs', {
+    params,
+  });
+  return data;
+}
+
+// Variants
+export interface StoreVariantPayload {
+  sku: string;
+  name: string;
+  price?: number | null; // sen; null = pakai harga produk
+  stock: number;
+  is_active?: boolean;
+}
+
+export async function createPartnerVariant(
+  productId: number,
+  payload: StoreVariantPayload,
+): Promise<import('@/types/product').ProductVariant> {
+  const { data } = await client.post<ApiItem<import('@/types/product').ProductVariant>>(
+    `/partner/products/${productId}/variants`,
+    payload,
+  );
+  return data.data;
+}
+
+export async function updatePartnerVariant(
+  productId: number,
+  variantId: number,
+  payload: Partial<StoreVariantPayload>,
+): Promise<import('@/types/product').ProductVariant> {
+  const { data } = await client.put<ApiItem<import('@/types/product').ProductVariant>>(
+    `/partner/products/${productId}/variants/${variantId}`,
+    payload,
+  );
+  return data.data;
+}
+
+export async function deletePartnerVariant(productId: number, variantId: number): Promise<void> {
+  await client.delete(`/partner/products/${productId}/variants/${variantId}`);
 }

@@ -19,6 +19,7 @@ export default function NewProductPage() {
       weight: values.weight,
       material: values.material,
       sustainability_notes: values.sustainability_notes,
+      images: values.images ?? [],
     });
     router.push('/partner/products');
   }

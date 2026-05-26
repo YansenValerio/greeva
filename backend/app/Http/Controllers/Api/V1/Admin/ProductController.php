@@ -8,6 +8,7 @@ use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\AdminUpdateProductRequest;
 use App\Http\Requests\Product\AdminUpdateStatusRequest;
+use App\Http\Requests\Product\BulkUpdateStatusRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Services\Product\ProductService;
@@ -76,6 +77,25 @@ class ProductController extends Controller
         return response()->json([
             'data'    => ProductResource::make($updated),
             'message' => "Status produk diubah ke \"{$status->label()}\".",
+        ]);
+    }
+
+    /**
+     * PATCH /api/v1/admin/products/bulk-status
+     * Ubah status banyak produk sekaligus (kurasi massal).
+     */
+    public function bulkUpdateStatus(BulkUpdateStatusRequest $request): JsonResponse
+    {
+        $status = ProductStatus::from($request->validated('status'));
+        $count  = $this->productService->bulkUpdateStatus(
+            $request->validated('product_ids'),
+            $status,
+            $request->validated('note'),
+        );
+
+        return response()->json([
+            'data'    => ['updated' => $count],
+            'message' => "{$count} produk diubah ke status \"{$status->label()}\".",
         ]);
     }
 }

@@ -10,13 +10,16 @@ use App\Events\OrderCompleted;
 use App\Models\Order;
 use App\Models\Shipment;
 use App\Services\Checkout\StockReservationService;
+use App\Services\Inventory\InventoryService;
 use App\Support\AuditLogger;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class OrderService
 {
     public function __construct(
         private readonly StockReservationService $stockService,
+        private readonly InventoryService $inventoryService,
     ) {}
 
     /**
@@ -67,6 +70,7 @@ class OrderService
                     'quantity'   => $i->quantity,
                 ])->toArray();
                 $this->stockService->release($items);
+                $this->inventoryService->logRelease($order);
             }
 
             // Buat shipment records saat status packing
@@ -105,6 +109,34 @@ class OrderService
         });
 
         return $order->fresh()->load(['items', 'shipments']);
+    }
+
+    /**
+     * Ubah status banyak order sekaligus. Transisi tidak valid per-order
+     * dikumpulkan sebagai kegagalan, bukan menggagalkan seluruh batch.
+     *
+     * @param  array<int, int>  $ids
+     * @return array{updated: array<int, string>, failed: array<int, array{order_number: string, reason: string}>}
+     */
+    public function bulkUpdateStatus(array $ids, OrderStatus $newStatus): array
+    {
+        $orders  = Order::with('items')->whereIn('id', $ids)->get();
+        $updated = [];
+        $failed  = [];
+
+        foreach ($orders as $order) {
+            try {
+                $this->updateStatus($order, $newStatus);
+                $updated[] = $order->order_number;
+            } catch (HttpExceptionInterface $e) {
+                $failed[] = [
+                    'order_number' => $order->order_number,
+                    'reason'       => $e->getMessage(),
+                ];
+            }
+        }
+
+        return ['updated' => $updated, 'failed' => $failed];
     }
 
     private function createShipments(Order $order): void

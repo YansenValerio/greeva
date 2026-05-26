@@ -18,9 +18,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Aktifkan Sanctum stateful API (cookie-based untuk SPA jika diperlukan)
-        $middleware->statefulApi();
-
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
         ]);

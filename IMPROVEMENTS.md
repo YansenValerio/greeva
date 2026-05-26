@@ -82,14 +82,20 @@ Sekarang `shipping_total = 0` (free). Integrasi RajaOngkir/Biteship API berdasar
 
 ## Partner Dashboard
 
-### 18. Partner Shipment Tools
-Sekarang admin yang input resi. Partner sebenarnya yang mengirim, harusnya mereka yang input — bukan admin. Refactor: partner lihat order yang ada produknya, input resi sendiri, admin tinggal monitoring.
+### 18. Partner Shipment Tools — ❌ TIDAK RELEVAN
+~~Sekarang admin yang input resi. Partner sebenarnya yang mengirim, harusnya mereka yang input.~~
 
-### 19. Partner Analytics Dashboard
+**Koreksi (2026-05-27):** Di model operasional Greeva, **admin yang mengirim paket & input resi**, bukan mitra. Mitra hanya titip produk (konsinyasi); fulfillment dikelola Greeva. Jadi desain "admin input resi" yang ada sekarang sudah benar — item ini dibatalkan.
+
+### 19. Partner Analytics Dashboard ✅
 Dashboard partner sekarang cuma earning summary. Tambah: top produk, conversion rate, traffic ke produk mereka, trend bulanan = nilai jual platform.
 
-### 20. Partner Inventory History
+**Done:** `PartnerAnalyticsService` + endpoint `GET /partner/analytics`, halaman `/partner/analytics` dengan KPI cards (unit terjual, penjualan kotor, total pesanan, pendapatan, produk aktif, stok menipis), tren penjualan 6 bulan (bar chart tanpa dependency), dan produk terlaris. Catatan: conversion rate & traffic di-skip karena belum ada sistem pelacakan view produk — bisa nyusul kalau event tracking ditambahkan.
+
+### 20. Partner Inventory History ✅
 Perubahan stok tidak ada log. Partner perlu tahu "kapan stok varian X drop dari 10 ke 3" untuk forecasting.
+
+**Done:** tabel `inventory_logs` + `InventoryService` yang mencatat setiap mutasi stok (sale, release, adjustment manual, stok awal) di checkout, pembatalan, payment-failed, dan edit varian. Endpoint `GET /partner/inventory-logs` (filter produk/alasan) + halaman `/partner/inventory`. Setiap entri simpan stok before/after + referensi order.
 
 ---
 
@@ -114,11 +120,15 @@ Hero image di landing pakai Next Image priority? Audit Lighthouse score → iden
 
 ## Admin Tools
 
-### 26. Dashboard Beneran (KPI Cards + Charts)
+### 26. Dashboard Beneran (KPI Cards + Charts) ✅
 Admin dashboard sekarang basic. Tambah: revenue bulan ini vs bulan lalu, top mitra, top kategori, pending payouts, low stock alerts. Pakai `recharts` atau `tremor`.
 
-### 27. Bulk Operations
+**Done:** `AdminDashboardService` + endpoint `GET /admin/dashboard`, halaman `/admin/dashboard` dirombak: KPI headline (revenue bulan ini + % vs bulan lalu, pesanan perlu dikirim, menunggu bayar, earning siap dicairkan), bar chart revenue 6 bulan, top mitra & top kategori, daftar peringatan stok menipis (link ke produk), plus quick links. Chart pakai div murni — tanpa dependency `recharts`/`tremor` (konsisten dengan #19). KPI "perlu dikirim" relevan karena admin yang handle fulfillment.
+
+### 27. Bulk Operations ✅
 Approve 10 produk sekaligus, bulk status update, bulk message ke buyer. Hemat waktu admin saat scale.
+
+**Done:** `PATCH /admin/products/bulk-status` (aktifkan/nonaktifkan/arsipkan banyak produk) + `PATCH /admin/orders/bulk-status` (packing/delivered/completed/cancelled massal, transisi tidak valid dilewati & dilaporkan, bukan menggagalkan batch). UI: checkbox per baris + pilih semua + bulk action bar (dropdown status + terapkan) di halaman admin produk & pesanan, dengan confirm dialog + toast. Bulk message ke buyer di-skip — butuh sistem messaging (email/WA broadcast) yang belum ada; bisa nyusul terpisah.
 
 ### 28. Audit Log Viewer
 Tabel `audit_logs` sudah diisi tapi belum ada UI admin untuk browse history. Penting untuk dispute resolution dengan mitra.
@@ -136,6 +146,6 @@ Kalau jadi tech lead dengan timeline ketat:
 2. ✅ **Order Cancellation + Status Timeline** (#3, #4) — UX critical untuk trust
 3. ✅ **Toast System + Confirmation Modal** (#5, #8) — quality multiplier di seluruh app
 4. ✅ **Saved Addresses** (#6) — friction reducer terbesar di checkout
-5. ⏳ **Partner Shipment Tools** (#18) — fix arsitektur "admin input resi" yang aneh
+5. ❌ **Partner Shipment Tools** (#18) — dibatalkan: admin memang yang handle fulfillment & input resi
 
-Top 5 sebagian besar sudah selesai. Tinggal #18 (Partner Shipment Tools) + 24 item lain di list utama yang bisa nyusul saat ada traffic dan feedback nyata.
+Top 5 selesai (#18 dibatalkan karena premisnya keliru). Sisanya 24 item di list utama bisa nyusul saat ada traffic dan feedback nyata.

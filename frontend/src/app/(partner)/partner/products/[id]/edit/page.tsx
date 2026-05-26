@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { ProductForm, type ProductFormValues } from '@/components/partner/ProductForm';
 import { getPartnerProduct, updatePartnerProduct } from '@/lib/api/partner';
+import { VariantManager } from '@/components/partner/VariantManager';
 import type { Product } from '@/types/product';
 
 export default function EditProductPage() {
@@ -31,6 +32,7 @@ export default function EditProductPage() {
       weight: values.weight,
       material: values.material,
       sustainability_notes: values.sustainability_notes,
+      images: values.images ?? [],
     });
     router.push('/partner/products');
   }
@@ -40,7 +42,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-10">
       <PageHeader title={`Edit: ${product.name}`} />
       <ProductForm
         defaultValues={{
@@ -53,10 +55,19 @@ export default function EditProductPage() {
           weight: product.weight ?? 0,
           material: product.material ?? '',
           sustainability_notes: product.sustainability_notes ?? '',
+          images: product.images ?? [],
         }}
         onSubmit={handleSubmit}
         submitLabel="Simpan Perubahan"
       />
+
+      <div className="max-w-2xl">
+        <VariantManager
+          productId={Number(id)}
+          variants={product.variants ?? []}
+          productPrice={product.price}
+        />
+      </div>
     </div>
   );
 }

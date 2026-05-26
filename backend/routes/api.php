@@ -29,6 +29,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
 
+    // ── Dev-only mock payment (tidak tersedia di production) ────────────────
+    if (app()->environment('local', 'staging')) {
+        Route::middleware('auth:sanctum')->post(
+            'dev/mock-pay/{orderNumber}',
+            \App\Http\Controllers\Api\V1\Dev\MockPayController::class,
+        );
+    }
+
     // ── Authentication ──────────────────────────────────────────────────────
     Route::prefix('auth')->group(function () {
         Route::post('register', [AuthController::class, 'register']);
@@ -85,6 +93,9 @@ Route::prefix('v1')->group(function () {
         // ── Admin ───────────────────────────────────────────────────────────
         Route::middleware('role:admin')->prefix('admin')->group(function () {
 
+            // Dashboard overview
+            Route::get('dashboard', [Admin\DashboardController::class, 'index']);
+
             // Category management
             Route::get('categories', [Admin\CategoryController::class, 'index']);
             Route::post('categories', [Admin\CategoryController::class, 'store']);
@@ -100,6 +111,7 @@ Route::prefix('v1')->group(function () {
 
             // Product management
             Route::get('products', [Admin\ProductController::class, 'index']);
+            Route::patch('products/bulk-status', [Admin\ProductController::class, 'bulkUpdateStatus']);
             Route::get('products/{product}', [Admin\ProductController::class, 'show']);
             Route::put('products/{product}', [Admin\ProductController::class, 'update']);
             Route::patch('products/{product}/status', [Admin\ProductController::class, 'updateStatus']);
@@ -111,6 +123,7 @@ Route::prefix('v1')->group(function () {
 
             // Order management (admin)
             Route::get('orders', [Admin\OrderController::class, 'index']);
+            Route::patch('orders/bulk-status', [Admin\OrderController::class, 'bulkUpdateStatus']);
             Route::get('orders/{order}', [Admin\OrderController::class, 'show']);
             Route::patch('orders/{order}/status', [Admin\OrderController::class, 'updateStatus']);
 
@@ -151,6 +164,10 @@ Route::prefix('v1')->group(function () {
             Route::get('earnings/summary', [Partner\EarningController::class, 'summary']);
             Route::get('payouts', [Partner\PayoutController::class, 'index']);
             Route::get('payouts/{payout}', [Partner\PayoutController::class, 'show']);
+
+            // Analytics & Inventory history
+            Route::get('analytics', [Partner\AnalyticsController::class, 'index']);
+            Route::get('inventory-logs', [Partner\InventoryController::class, 'index']);
 
             // AI Copywriter (rate-limited)
             Route::middleware('throttle:20,1')->post('ai/generate-copy', [Partner\AiController::class, 'generateCopy']);

@@ -24,6 +24,19 @@ class MidtransService
      *
      * @return array{token: string, redirect_url: string}
      */
+    public function isMockMode(): bool
+    {
+        return empty(config('services.midtrans.server_key'));
+    }
+
+    public function createMockSnap(Order $order): array
+    {
+        return [
+            'token'        => 'GREEVA_MOCK_' . $order->order_number,
+            'redirect_url' => '',
+        ];
+    }
+
     public function createSnap(Order $order): array
     {
         $params = [

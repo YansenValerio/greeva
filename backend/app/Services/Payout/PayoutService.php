@@ -50,7 +50,7 @@ class PayoutService
             $itemCount   = $earnings->count();
 
             // Generate nomor payout: PYT-YYYYMMDD-NNN
-            $seq          = PayoutBatch::whereDate('created_at', today())->lockForUpdate()->count() + 1;
+            $seq          = PayoutBatch::whereDate('created_at', today())->count() + 1;
             $payoutNumber = sprintf('PYT-%s-%03d', now()->format('Ymd'), $seq);
 
             $batch = PayoutBatch::create([

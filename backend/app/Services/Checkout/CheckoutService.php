@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\Cart\CartService;
+use App\Services\Inventory\InventoryService;
 use App\Services\Payment\MidtransService;
 use App\Support\AuditLogger;
 use App\Support\Money;
@@ -21,6 +22,7 @@ class CheckoutService
         private readonly CartService $cartService,
         private readonly StockReservationService $stockService,
         private readonly MidtransService $midtransService,
+        private readonly InventoryService $inventoryService,
     ) {}
 
     /**
@@ -44,7 +46,9 @@ class CheckoutService
 
         // Panggil Midtrans di luar transaction agar tidak memperpanjang lock DB
         try {
-            $snap = $this->midtransService->createSnap($order->load('items'));
+            $snap = $this->midtransService->isMockMode()
+                ? $this->midtransService->createMockSnap($order)
+                : $this->midtransService->createSnap($order->load('items'));
 
             $order->update([
                 'payment_token' => $snap['token'],
@@ -55,6 +59,7 @@ class CheckoutService
             $this->stockService->release(
                 array_map(fn ($i) => ['variant_id' => $i['variant_id'], 'quantity' => $i['quantity']], $cartItems)
             );
+            $this->inventoryService->logRelease($order->load('items'));
             $order->update(['status' => OrderStatus::PaymentFailed]);
             AuditLogger::log('status_changed', $order,
                 ['status' => 'pending_payment'],
@@ -97,6 +102,9 @@ class CheckoutService
                 }
             }
 
+            // Snapshot stok sebelum dipotong (untuk inventory log)
+            $stockBefore = $variants->mapWithKeys(fn ($v) => [$v->id => $v->stock])->all();
+
             // Potong stok (provisional — dikembalikan jika bayar gagal)
             $this->stockService->reserve(
                 array_map(fn ($i) => ['variant_id' => $i['variant_id'], 'quantity' => $i['quantity']], $cartItems)
@@ -113,7 +121,7 @@ class CheckoutService
             $grandTotal = $subtotal + $shippingTotal;
 
             // Generate nomor order: GRV-YYYYMMDD-NNNN
-            $count       = Order::whereDate('created_at', today())->lockForUpdate()->count() + 1;
+            $count       = Order::whereDate('created_at', today())->count() + 1;
             $orderNumber = sprintf(
                 '%s-%s-%04d',
                 config('greeva.order_number_prefix'),
@@ -174,6 +182,8 @@ class CheckoutService
                 'grand_total'  => $order->grand_total,
                 'item_count'   => count($cartItems),
             ]);
+
+            $this->inventoryService->logSale($order->load('items'), $stockBefore);
 
             return $order;
         });
