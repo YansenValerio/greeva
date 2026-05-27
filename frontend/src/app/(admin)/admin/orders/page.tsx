@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { Pagination } from '@/components/shared/Pagination';
 import { adminGetOrders, adminBulkUpdateOrderStatus } from '@/lib/api/admin';
 import { toast, confirm } from '@/lib/feedback';
 import type { Order } from '@/types/order';
+import type { PaginationMeta } from '@/types/api';
 
 const STATUS_BADGE: Record<string, 'green' | 'amber' | 'gray'> = {
   paid: 'green',
@@ -40,6 +42,8 @@ const BULK_ACTIONS: { label: string; value: string }[] = [
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -48,8 +52,11 @@ export default function AdminOrdersPage() {
 
   function load() {
     setLoading(true);
-    adminGetOrders({ per_page: 50, status: status || undefined })
-      .then((res) => setOrders(res.data))
+    adminGetOrders({ per_page: 20, page, status: status || undefined })
+      .then((res) => {
+        setOrders(res.data);
+        setMeta(res.meta);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }
@@ -58,7 +65,12 @@ export default function AdminOrdersPage() {
     setSelected(new Set());
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, page]);
+
+  function changeStatus(value: string) {
+    setStatus(value);
+    setPage(1);
+  }
 
   function toggle(id: number) {
     setSelected((prev) => {
@@ -117,7 +129,7 @@ export default function AdminOrdersPage() {
         {STATUS_FILTERS.map((f) => (
           <button
             key={f.value}
-            onClick={() => setStatus(f.value)}
+            onClick={() => changeStatus(f.value)}
             className={`rounded-pill px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
               status === f.value
                 ? 'bg-greeva-forest text-white'
@@ -214,6 +226,15 @@ export default function AdminOrdersPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {meta && meta.last_page > 1 && (
+        <Pagination
+          currentPage={meta.current_page}
+          lastPage={meta.last_page}
+          onPageChange={setPage}
+          className="mt-6"
+        />
       )}
     </div>
   );

@@ -67,6 +67,7 @@ Route::prefix('v1')->group(function () {
     // ── Public — Produk ─────────────────────────────────────────────────────
     Route::get('products', [PublicProductController::class, 'index']);
     Route::get('products/{slug}', [PublicProductController::class, 'show']);
+    Route::get('products/{slug}/related', [PublicProductController::class, 'related']);
     Route::get('products/{slug}/reviews', [\App\Http\Controllers\Api\V1\Public\ProductReviewController::class, 'index']);
 
     // ── Public — Midtrans webhook ───────────────────────────────────────────
@@ -178,6 +179,9 @@ Route::prefix('v1')->group(function () {
         // Cart merge — require auth (gabung guest cart ke akun)
         Route::post('cart/merge', [CartController::class, 'merge']);
 
+        // Ongkir — hitung opsi pengiriman dari isi cart (buyer)
+        Route::middleware('role:buyer')->post('shipping/rates', [Buyer\ShippingController::class, 'rates']);
+
         // Checkout
         Route::middleware('role:buyer')->post('checkout', [Buyer\CheckoutController::class, 'store']);
 
@@ -195,6 +199,13 @@ Route::prefix('v1')->group(function () {
             Route::put('{address}', [Buyer\AddressController::class, 'update']);
             Route::delete('{address}', [Buyer\AddressController::class, 'destroy']);
             Route::patch('{address}/default', [Buyer\AddressController::class, 'setDefault']);
+        });
+
+        // Wishlist (buyer)
+        Route::prefix('wishlist')->group(function () {
+            Route::get('/', [Buyer\WishlistController::class, 'index']);
+            Route::post('{product}', [Buyer\WishlistController::class, 'store']);
+            Route::delete('{product}', [Buyer\WishlistController::class, 'destroy']);
         });
 
         // Product reviews (buyer create; owner/admin update & delete)

@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { Pagination } from '@/components/shared/Pagination';
 import { getPartnerProducts, submitPartnerProduct, deletePartnerProduct } from '@/lib/api/partner';
 import { toast, confirm } from '@/lib/feedback';
 import type { Product } from '@/types/product';
+import type { PaginationMeta } from '@/types/api';
 
 const STATUS_BADGE: Record<string, 'green' | 'amber' | 'gray'> = {
   active: 'green',
@@ -19,18 +21,27 @@ const STATUS_BADGE: Record<string, 'green' | 'amber' | 'gray'> = {
 
 export default function PartnerProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
 
   function load() {
-    getPartnerProducts({ per_page: 50 })
-      .then((res) => setProducts(res.data))
+    setLoading(true);
+    getPartnerProducts({ per_page: 20, page })
+      .then((res) => {
+        setProducts(res.data);
+        setMeta(res.meta);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
   async function handleSubmit(id: number) {
     setSubmitting(id);
@@ -134,6 +145,15 @@ export default function PartnerProductsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {meta && meta.last_page > 1 && (
+        <Pagination
+          currentPage={meta.current_page}
+          lastPage={meta.last_page}
+          onPageChange={setPage}
+          className="mt-6"
+        />
       )}
     </div>
   );

@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { Pagination } from '@/components/shared/Pagination';
 import { getPartnerEarnings, getPartnerEarningSummary } from '@/lib/api/partner';
 import type { PartnerEarning, EarningSummary } from '@/types/partner';
+import type { PaginationMeta } from '@/types/api';
 
 type EarningStatus = 'pending' | 'available' | 'paid' | 'reversed';
 
@@ -26,6 +28,8 @@ const FILTERS: { label: string; value: EarningStatus | '' }[] = [
 
 export default function PartnerEarningsPage() {
   const [earnings, setEarnings] = useState<PartnerEarning[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [summary, setSummary] = useState<EarningSummary | null>(null);
   const [status, setStatus] = useState<EarningStatus | ''>('');
   const [loading, setLoading] = useState(true);
@@ -33,16 +37,22 @@ export default function PartnerEarningsPage() {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      getPartnerEarnings({ per_page: 50, status: status || undefined }),
+      getPartnerEarnings({ per_page: 20, page, status: status || undefined }),
       getPartnerEarningSummary(),
     ])
       .then(([e, s]) => {
         setEarnings(e.data);
+        setMeta(e.meta);
         setSummary(s);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [status]);
+  }, [status, page]);
+
+  function changeStatus(value: EarningStatus | '') {
+    setStatus(value);
+    setPage(1);
+  }
 
   return (
     <div>
@@ -71,7 +81,7 @@ export default function PartnerEarningsPage() {
         {FILTERS.map((f) => (
           <button
             key={f.value}
-            onClick={() => setStatus(f.value)}
+            onClick={() => changeStatus(f.value)}
             className={`rounded-pill px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
               status === f.value
                 ? 'bg-greeva-forest text-white'
@@ -120,6 +130,15 @@ export default function PartnerEarningsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {meta && meta.last_page > 1 && (
+        <Pagination
+          currentPage={meta.current_page}
+          lastPage={meta.last_page}
+          onPageChange={setPage}
+          className="mt-6"
+        />
       )}
     </div>
   );

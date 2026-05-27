@@ -13,8 +13,10 @@ import {
   type AdminGeneratePayoutPayload,
 } from '@/lib/api/admin';
 import { adminGetPartners } from '@/lib/api/admin';
+import { Pagination } from '@/components/shared/Pagination';
 import { toast, confirm } from '@/lib/feedback';
 import type { PayoutBatch, Partner } from '@/types/partner';
+import type { PaginationMeta } from '@/types/api';
 
 const STATUS_BADGE: Record<string, 'green' | 'amber' | 'gray'> = {
   paid: 'green',
@@ -26,6 +28,8 @@ const STATUS_BADGE: Record<string, 'green' | 'amber' | 'gray'> = {
 
 export default function AdminPayoutsPage() {
   const [payouts, setPayouts] = useState<PayoutBatch[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -38,14 +42,26 @@ export default function AdminPayoutsPage() {
   const [actionId, setActionId] = useState<number | null>(null);
 
   function load() {
-    return adminGetPayouts({ per_page: 50 }).then((res) => setPayouts(res.data));
+    setLoading(true);
+    return adminGetPayouts({ per_page: 20, page })
+      .then((res) => {
+        setPayouts(res.data);
+        setMeta(res.meta);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => {
-    Promise.all([load(), adminGetPartners({ per_page: 100 }).then((res) => setPartners(res.data))])
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    adminGetPartners({ per_page: 100 })
+      .then((res) => setPartners(res.data))
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
   async function handleGenerate() {
     setGenerating(true);
@@ -211,6 +227,15 @@ export default function AdminPayoutsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {meta && meta.last_page > 1 && (
+        <Pagination
+          currentPage={meta.current_page}
+          lastPage={meta.last_page}
+          onPageChange={setPage}
+          className="mt-6"
+        />
       )}
     </div>
   );

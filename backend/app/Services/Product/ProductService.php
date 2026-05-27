@@ -120,6 +120,27 @@ class ProductService
             ->firstOrFail();
     }
 
+    /**
+     * Produk serupa untuk PDP — dari kategori atau mitra yang sama.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Product>
+     */
+    public function relatedProducts(Product $product, int $limit = 4)
+    {
+        return Product::with(['partner:id,name,slug', 'category:id,name,slug', 'activeVariants'])
+            ->withCount(['approvedReviews as reviews_count'])
+            ->withAvg(['approvedReviews as average_rating'], 'rating')
+            ->active()
+            ->where('id', '!=', $product->id)
+            ->where(function ($query) use ($product) {
+                $query->where('category_id', $product->category_id)
+                    ->orWhere('partner_id', $product->partner_id);
+            })
+            ->latest('published_at')
+            ->limit($limit)
+            ->get();
+    }
+
     // ── Partner ──────────────────────────────────────────────────────────────
 
     public function listForPartner(Partner $partner, array $filters): LengthAwarePaginator

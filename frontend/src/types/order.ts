@@ -51,6 +51,8 @@ export interface Order {
   shipping_city: string;
   shipping_district: string | null;
   shipping_postal_code: string;
+  shipping_courier: string | null;
+  shipping_service: string | null;
   notes: string | null;
   payment_token: string | null;
   payment_url: string | null;
@@ -80,5 +82,7 @@ export interface CheckoutPayload {
   shipping_city: string;
   shipping_district?: string;
   shipping_postal_code: string;
+  shipping_courier: string;
+  shipping_service: string;
   notes?: string;
 }

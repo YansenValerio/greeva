@@ -13,6 +13,8 @@ export const checkoutSchema = z.object({
     .string()
     .length(5, 'Kode pos harus 5 digit angka.')
     .regex(/^\d{5}$/, 'Kode pos harus berupa angka.'),
+  shipping_courier: z.string().min(1, 'Pilih kurir pengiriman.'),
+  shipping_service: z.string().min(1, 'Pilih layanan pengiriman.'),
   notes: z.string().max(500).optional(),
 });
 

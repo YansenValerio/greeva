@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { StarRating } from './StarRating';
+import { Pagination } from '@/components/shared/Pagination';
 import {
   getProductReviews,
   type ReviewSort,
@@ -22,14 +23,20 @@ export function ReviewList({ slug }: ReviewListProps) {
   const [data, setData] = useState<ReviewListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<ReviewSort>('newest');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     setLoading(true);
-    getProductReviews(slug, { sort, per_page: 10 })
+    getProductReviews(slug, { sort, page, per_page: 10 })
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-  }, [slug, sort]);
+  }, [slug, sort, page]);
+
+  function changeSort(value: ReviewSort) {
+    setSort(value);
+    setPage(1);
+  }
 
   if (loading && !data) {
     return (
@@ -71,7 +78,7 @@ export function ReviewList({ slug }: ReviewListProps) {
 
         <select
           value={sort}
-          onChange={(e) => setSort(e.target.value as ReviewSort)}
+          onChange={(e) => changeSort(e.target.value as ReviewSort)}
           className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-greeva-forest focus:outline-none"
         >
           {SORT_OPTIONS.map((opt) => (
@@ -118,11 +125,13 @@ export function ReviewList({ slug }: ReviewListProps) {
         ))}
       </div>
 
-      {/* Pagination indicator */}
+      {/* Pagination */}
       {data.meta.last_page > 1 && (
-        <p className="text-center text-sm text-gray-400">
-          Menampilkan {data.data.length} dari {data.meta.total} ulasan
-        </p>
+        <Pagination
+          currentPage={data.meta.current_page}
+          lastPage={data.meta.last_page}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );

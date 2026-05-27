@@ -24,6 +24,8 @@ class Order extends Model
         'status',
         'subtotal',
         'shipping_total',
+        'shipping_courier',
+        'shipping_service',
         'discount_total',
         'grand_total',
         'shipping_name',

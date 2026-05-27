@@ -4,6 +4,7 @@ import { Container } from '@/components/shared/Container';
 import { ProductGrid } from '@/components/catalog/ProductGrid';
 import { CategoryFilter } from '@/components/catalog/CategoryFilter';
 import { SearchBar } from '@/components/catalog/SearchBar';
+import { Pagination } from '@/components/shared/Pagination';
 import { getProducts } from '@/lib/api/products';
 import { getCategories } from '@/lib/api/categories';
 
@@ -82,13 +83,15 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           {/* Grid produk */}
           <ProductGrid products={productsRes.data ?? []} />
 
-          {/* Pagination placeholder */}
+          {/* Pagination */}
           {productsRes.meta && productsRes.meta.last_page > 1 && (
-            <div className="mt-10 flex justify-center gap-2 text-sm text-gray-500">
-              <span>
-                Halaman {productsRes.meta.current_page} dari {productsRes.meta.last_page}
-              </span>
-            </div>
+            <Suspense>
+              <Pagination
+                currentPage={productsRes.meta.current_page}
+                lastPage={productsRes.meta.last_page}
+                className="mt-10"
+              />
+            </Suspense>
           )}
         </Container>
       </section>

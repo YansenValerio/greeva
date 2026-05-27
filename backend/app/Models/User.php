@@ -61,6 +61,11 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmailC
         return $this->hasMany(Address::class);
     }
 
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     public function isAdmin(): bool

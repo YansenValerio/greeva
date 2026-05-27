@@ -21,3 +21,8 @@ export async function getProductBySlug(slug: string): Promise<Product> {
   const { data } = await client.get<ApiItem<Product>>(`/products/${slug}`);
   return data.data;
 }
+
+export async function getRelatedProducts(slug: string): Promise<Product[]> {
+  const { data } = await client.get<{ data: Product[] }>(`/products/${slug}/related`);
+  return data.data;
+}

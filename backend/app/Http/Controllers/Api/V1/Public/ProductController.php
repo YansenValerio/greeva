@@ -46,4 +46,18 @@ class ProductController extends Controller
             'data' => ProductResource::make($product),
         ]);
     }
+
+    /**
+     * GET /api/v1/products/{slug}/related
+     * Publik — produk serupa (kategori/mitra sama).
+     */
+    public function related(string $slug): JsonResponse
+    {
+        $product = $this->productService->findPublicBySlug($slug);
+        $related = $this->productService->relatedProducts($product);
+
+        return response()->json([
+            'data' => ProductResource::collection($related),
+        ]);
+    }
 }

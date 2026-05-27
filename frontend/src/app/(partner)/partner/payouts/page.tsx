@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { Pagination } from '@/components/shared/Pagination';
 import { getPartnerPayouts } from '@/lib/api/partner';
 import type { PayoutBatch } from '@/types/partner';
+import type { PaginationMeta } from '@/types/api';
 
 const STATUS_BADGE: Record<string, 'green' | 'amber' | 'gray'> = {
   paid: 'green',
@@ -17,14 +19,20 @@ const STATUS_BADGE: Record<string, 'green' | 'amber' | 'gray'> = {
 
 export default function PartnerPayoutsPage() {
   const [payouts, setPayouts] = useState<PayoutBatch[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getPartnerPayouts({ per_page: 50 })
-      .then((res) => setPayouts(res.data))
+    setLoading(true);
+    getPartnerPayouts({ per_page: 20, page })
+      .then((res) => {
+        setPayouts(res.data);
+        setMeta(res.meta);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   if (loading) {
     return (
@@ -71,6 +79,15 @@ export default function PartnerPayoutsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {meta && meta.last_page > 1 && (
+        <Pagination
+          currentPage={meta.current_page}
+          lastPage={meta.last_page}
+          onPageChange={setPage}
+          className="mt-6"
+        />
       )}
     </div>
   );

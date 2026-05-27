@@ -4,19 +4,27 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { Pagination } from '@/components/shared/Pagination';
 import { adminGetPartners } from '@/lib/api/admin';
 import type { Partner } from '@/types/partner';
+import type { PaginationMeta } from '@/types/api';
 
 export default function AdminPartnersPage() {
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    adminGetPartners({ per_page: 50 })
-      .then((res) => setPartners(res.data))
+    setLoading(true);
+    adminGetPartners({ per_page: 20, page })
+      .then((res) => {
+        setPartners(res.data);
+        setMeta(res.meta);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   if (loading) {
     return (
@@ -59,6 +67,15 @@ export default function AdminPartnersPage() {
             </Link>
           ))}
         </div>
+      )}
+
+      {meta && meta.last_page > 1 && (
+        <Pagination
+          currentPage={meta.current_page}
+          lastPage={meta.last_page}
+          onPageChange={setPage}
+          className="mt-6"
+        />
       )}
     </div>
   );

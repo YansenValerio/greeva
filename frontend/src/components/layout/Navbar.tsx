@@ -7,6 +7,8 @@ import { ShoppingBag, LogOut, User, Search, X } from 'lucide-react';
 import { Container } from '@/components/shared/Container';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
+import { useCartUiStore } from '@/stores/cart-ui.store';
+import { useWishlistStore } from '@/stores/wishlist.store';
 import { useHydrated } from '@/hooks/useHydrated';
 import { logout as logoutApi } from '@/lib/api/auth';
 import { getGuestCartToken } from '@/lib/guestCart';
@@ -51,6 +53,9 @@ export function Navbar() {
 
   const { isAuthenticated, user, logout } = useAuthStore();
   const { count, reset: resetCart, fetch: fetchCart } = useCartStore();
+  const openCart = useCartUiStore((s) => s.openCart);
+  const fetchWishlist = useWishlistStore((s) => s.fetch);
+  const resetWishlist = useWishlistStore((s) => s.reset);
 
   // Sync cart count saat hydrated — untuk auth user atau guest yang sudah punya token
   useEffect(() => {
@@ -58,7 +63,10 @@ export function Navbar() {
     if (isAuthenticated || getGuestCartToken()) {
       fetchCart();
     }
-  }, [hydrated, isAuthenticated, fetchCart]);
+    if (isAuthenticated) {
+      fetchWishlist();
+    }
+  }, [hydrated, isAuthenticated, fetchCart, fetchWishlist]);
 
   const handleLogout = async () => {
     try {
@@ -68,6 +76,7 @@ export function Navbar() {
     }
     logout();
     resetCart();
+    resetWishlist();
     router.push('/');
   };
 
@@ -156,8 +165,9 @@ export function Navbar() {
             </button>
 
             {/* Cart */}
-            <Link
-              href="/cart"
+            <button
+              type="button"
+              onClick={openCart}
               aria-label={`Keranjang belanja${count > 0 ? ` (${count} item)` : ''}`}
               className="relative text-white/80 hover:text-white transition-colors"
             >
@@ -167,7 +177,7 @@ export function Navbar() {
                   {count > 9 ? '9+' : count}
                 </span>
               )}
-            </Link>
+            </button>
 
             {/* Auth */}
             {hydrated ? (

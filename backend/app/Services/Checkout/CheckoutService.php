@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\Cart\CartService;
 use App\Services\Inventory\InventoryService;
 use App\Services\Payment\MidtransService;
+use App\Services\Shipping\ShippingService;
 use App\Support\AuditLogger;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,7 @@ class CheckoutService
         private readonly StockReservationService $stockService,
         private readonly MidtransService $midtransService,
         private readonly InventoryService $inventoryService,
+        private readonly ShippingService $shippingService,
     ) {}
 
     /**
@@ -42,7 +44,20 @@ class CheckoutService
             abort(422, 'Keranjang belanja kosong.');
         }
 
-        $order = $this->createOrderInTransaction($cartItems, $checkoutData, $user);
+        // Hitung ulang ongkir di server (harga tidak dipercaya dari client).
+        // Dilakukan di luar transaction agar panggilan provider tidak memperpanjang lock DB.
+        $rate = $this->shippingService->resolveRate(
+            $cartItems,
+            $checkoutData['shipping_postal_code'],
+            $checkoutData['shipping_courier'],
+            $checkoutData['shipping_service'],
+        );
+
+        if (! $rate) {
+            abort(422, 'Opsi pengiriman tidak valid. Silakan muat ulang ongkir.');
+        }
+
+        $order = $this->createOrderInTransaction($cartItems, $checkoutData, $user, $rate);
 
         // Panggil Midtrans di luar transaction agar tidak memperpanjang lock DB
         try {
@@ -79,9 +94,13 @@ class CheckoutService
         ];
     }
 
-    private function createOrderInTransaction(array $cartItems, array $checkoutData, User $user): Order
-    {
-        return DB::transaction(function () use ($cartItems, $checkoutData, $user) {
+    private function createOrderInTransaction(
+        array $cartItems,
+        array $checkoutData,
+        User $user,
+        \App\Services\Shipping\ShippingRate $rate,
+    ): Order {
+        return DB::transaction(function () use ($cartItems, $checkoutData, $user, $rate) {
             $variantIds = array_column($cartItems, 'variant_id');
             $productIds = array_column($cartItems, 'product_id');
 
@@ -112,7 +131,7 @@ class CheckoutService
 
             // Hitung total
             $subtotal      = 0;
-            $shippingTotal = 0; // Gratis ongkir v1
+            $shippingTotal = $rate->cost; // sen — sudah dihitung ulang di server
 
             foreach ($cartItems as $item) {
                 $subtotal += $item['price'] * $item['quantity'];
@@ -136,6 +155,8 @@ class CheckoutService
                 'status'               => OrderStatus::PendingPayment,
                 'subtotal'             => $subtotal,
                 'shipping_total'       => $shippingTotal,
+                'shipping_courier'     => $rate->courierName,
+                'shipping_service'     => $rate->serviceName,
                 'discount_total'       => 0,
                 'grand_total'          => $grandTotal,
                 'shipping_name'        => $checkoutData['shipping_name'],

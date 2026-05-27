@@ -222,6 +222,12 @@ export default function AccountPage() {
                 >
                   Alamat Tersimpan →
                 </Link>
+                <Link
+                  href="/account/wishlist"
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-greeva-forest-dark hover:bg-white/60 transition-colors"
+                >
+                  Wishlist →
+                </Link>
                 {user.role === 'partner' && (
                   <Link
                     href="/partner/dashboard"

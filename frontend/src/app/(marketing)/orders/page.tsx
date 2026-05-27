@@ -6,10 +6,12 @@ import Link from 'next/link';
 import { Container } from '@/components/shared/Container';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
+import { Pagination } from '@/components/shared/Pagination';
 import { getOrders } from '@/lib/api/orders';
 import { useAuthStore } from '@/stores/auth.store';
 import { useHydrated } from '@/hooks/useHydrated';
 import type { Order } from '@/types/order';
+import type { PaginationMeta } from '@/types/api';
 
 const STATUS_BADGE: Record<string, 'green' | 'amber' | 'gray'> = {
   paid: 'green',
@@ -29,6 +31,8 @@ export default function OrdersPage() {
   const { isAuthenticated } = useAuthStore();
 
   const [orders, setOrders] = useState<Order[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,11 +41,15 @@ export default function OrdersPage() {
       router.push('/login?next=/orders');
       return;
     }
-    getOrders({ per_page: 20 })
-      .then((res) => setOrders(res.data))
+    setLoading(true);
+    getOrders({ per_page: 20, page })
+      .then((res) => {
+        setOrders(res.data);
+        setMeta(res.meta);
+      })
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
-  }, [hydrated, isAuthenticated, router]);
+  }, [hydrated, isAuthenticated, router, page]);
 
   if (!hydrated || loading) {
     return (
@@ -98,6 +106,15 @@ export default function OrdersPage() {
               </Link>
             ))}
           </div>
+        )}
+
+        {meta && meta.last_page > 1 && (
+          <Pagination
+            currentPage={meta.current_page}
+            lastPage={meta.last_page}
+            onPageChange={setPage}
+            className="mt-8"
+          />
         )}
       </Container>
     </main>

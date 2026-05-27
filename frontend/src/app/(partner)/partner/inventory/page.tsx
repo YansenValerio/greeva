@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { Pagination } from '@/components/shared/Pagination';
 import { getPartnerInventoryLogs, getPartnerProducts } from '@/lib/api/partner';
 import type { InventoryLog, InventoryReason } from '@/types/partner';
 import type { Product } from '@/types/product';
+import type { PaginationMeta } from '@/types/api';
 
 const REASON_BADGE: Record<InventoryReason, 'green' | 'amber' | 'gray'> = {
   sale: 'amber',
@@ -24,6 +26,8 @@ const REASON_FILTERS: { label: string; value: InventoryReason | '' }[] = [
 
 export default function PartnerInventoryPage() {
   const [logs, setLogs] = useState<InventoryLog[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
   const [productId, setProductId] = useState<number | ''>('');
   const [reason, setReason] = useState<InventoryReason | ''>('');
@@ -38,14 +42,28 @@ export default function PartnerInventoryPage() {
   useEffect(() => {
     setLoading(true);
     getPartnerInventoryLogs({
-      per_page: 50,
+      per_page: 20,
+      page,
       product_id: productId || undefined,
       reason: reason || undefined,
     })
-      .then((res) => setLogs(res.data))
+      .then((res) => {
+        setLogs(res.data);
+        setMeta(res.meta);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [productId, reason]);
+  }, [productId, reason, page]);
+
+  function changeProduct(value: number | '') {
+    setProductId(value);
+    setPage(1);
+  }
+
+  function changeReason(value: InventoryReason | '') {
+    setReason(value);
+    setPage(1);
+  }
 
   return (
     <div>
@@ -58,7 +76,7 @@ export default function PartnerInventoryPage() {
       <div className="mb-4">
         <select
           value={productId}
-          onChange={(e) => setProductId(e.target.value ? Number(e.target.value) : '')}
+          onChange={(e) => changeProduct(e.target.value ? Number(e.target.value) : '')}
           className="w-full rounded-lg border-[1.5px] border-gray-200 px-4 py-2.5 text-sm focus:border-greeva-forest focus:outline-none focus:ring-2 focus:ring-greeva-leaf/40 sm:max-w-xs"
         >
           <option value="">Semua produk</option>
@@ -75,7 +93,7 @@ export default function PartnerInventoryPage() {
         {REASON_FILTERS.map((f) => (
           <button
             key={f.value}
-            onClick={() => setReason(f.value)}
+            onClick={() => changeReason(f.value)}
             className={`rounded-pill px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
               reason === f.value
                 ? 'bg-greeva-forest text-white'
@@ -136,6 +154,15 @@ export default function PartnerInventoryPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {meta && meta.last_page > 1 && (
+        <Pagination
+          currentPage={meta.current_page}
+          lastPage={meta.last_page}
+          onPageChange={setPage}
+          className="mt-6"
+        />
       )}
     </div>
   );

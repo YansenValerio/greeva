@@ -82,7 +82,7 @@ export default function CheckoutPage() {
                 <span className="text-greeva-black">Subtotal</span>
                 <Price cents={subtotal} className="text-greeva-forest-dark" />
               </div>
-              <p className="mt-1 text-xs text-gray-500">+ ongkos kirim dihitung saat pembayaran</p>
+              <p className="mt-1 text-xs text-gray-500">+ ongkos kirim sesuai kurir yang dipilih di formulir</p>
             </div>
           </div>
         </div>

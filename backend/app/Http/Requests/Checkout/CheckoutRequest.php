@@ -18,6 +18,8 @@ class CheckoutRequest extends FormRequest
             'shipping_city'        => ['required', 'string', 'max:100'],
             'shipping_district'    => ['nullable', 'string', 'max:100'],
             'shipping_postal_code' => ['required', 'string', 'size:5'],
+            'shipping_courier'     => ['required', 'string', 'max:50'],
+            'shipping_service'     => ['required', 'string', 'max:50'],
             'notes'                => ['nullable', 'string', 'max:500'],
         ];
     }
@@ -32,6 +34,8 @@ class CheckoutRequest extends FormRequest
             'shipping_city.required'        => 'Kota/Kabupaten wajib diisi.',
             'shipping_postal_code.required' => 'Kode pos wajib diisi.',
             'shipping_postal_code.size'     => 'Kode pos harus 5 digit.',
+            'shipping_courier.required'     => 'Pilih kurir pengiriman.',
+            'shipping_service.required'     => 'Pilih layanan pengiriman.',
         ];
     }
 }

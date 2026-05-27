@@ -4,6 +4,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/stores/cart.store';
+import { useCartUiStore } from '@/stores/cart-ui.store';
 import type { ProductVariant } from '@/types/product';
 
 interface AddToCartButtonProps {
@@ -14,6 +15,7 @@ interface AddToCartButtonProps {
 
 export function AddToCartButton({ variants, defaultPrice, totalStock }: AddToCartButtonProps) {
   const addItem = useCartStore((s) => s.addItem);
+  const openCart = useCartUiStore((s) => s.openCart);
 
   const activeVariants = variants.filter((v) => v.is_active);
   const [selected, setSelected] = useState<ProductVariant | null>(activeVariants[0] ?? null);
@@ -36,6 +38,7 @@ export function AddToCartButton({ variants, defaultPrice, totalStock }: AddToCar
       await addItem(selected.id, qty);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
+      openCart();
     } catch (e) {
       const msg =
         axios.isAxiosError(e)

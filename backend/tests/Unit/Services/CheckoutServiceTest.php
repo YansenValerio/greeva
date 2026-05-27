@@ -26,6 +26,8 @@ function makeCheckoutData(): array
         'shipping_province'    => 'Jawa Barat',
         'shipping_city'        => 'Bandung',
         'shipping_postal_code' => '40111',
+        'shipping_courier'     => 'jne',
+        'shipping_service'     => 'REG',
     ];
 }
 
@@ -64,6 +66,7 @@ it('creates order with correct snapshot fields', function () {
     $product  = Product::factory()->for($partner)->for($category)->create([
         'price'                 => 2500000, // Rp 25.000 dalam sen
         'revenue_share_percent' => 80,
+        'weight'                => 300, // 300g × 2 = 600g → minimum 1kg → ongkir base
     ]);
     $variant = ProductVariant::factory()->for($product)->create([
         'price' => null, // pakai product.price
@@ -88,8 +91,10 @@ it('creates order with correct snapshot fields', function () {
 
     expect($order)->toBeInstanceOf(Order::class)
         ->and($order->status)->toBe(OrderStatus::PendingPayment)
-        ->and($order->subtotal)->toBe(5000000)  // 2500000 × 2
-        ->and($order->grand_total)->toBe(5000000);
+        ->and($order->subtotal)->toBe(5000000)       // 2500000 × 2
+        ->and($order->shipping_total)->toBe(1000000) // ongkir JNE REG (mock, 1kg base)
+        ->and($order->shipping_courier)->toBe('JNE')
+        ->and($order->grand_total)->toBe(6000000);   // subtotal + ongkir
 
     $item = $order->items->first();
 

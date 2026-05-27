@@ -6,9 +6,12 @@ import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { ProductImageGallery } from '@/components/catalog/ProductImageGallery';
 import { AddToCartButton } from '@/components/catalog/AddToCartButton';
+import { ProductGrid } from '@/components/catalog/ProductGrid';
+import { RecentlyViewed } from '@/components/catalog/RecentlyViewed';
+import { TrackRecentlyViewed } from '@/components/catalog/TrackRecentlyViewed';
 import { StarRating } from '@/components/reviews/StarRating';
 import { ReviewList } from '@/components/reviews/ReviewList';
-import { getProductBySlug } from '@/lib/api/products';
+import { getProductBySlug, getRelatedProducts } from '@/lib/api/products';
 
 interface ProductPageProps {
   params: { slug: string };
@@ -33,6 +36,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   } catch {
     notFound();
   }
+
+  const related = await getRelatedProducts(params.slug).catch(() => []);
 
   const hasDiscount =
     product.compare_price !== null && product.compare_price > product.price;
@@ -188,7 +193,29 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <h2 className="mb-6 text-h2 font-bold text-greeva-black">Ulasan Pembeli</h2>
           <ReviewList slug={product.slug} />
         </section>
+
+        {/* Produk serupa */}
+        {related.length > 0 && (
+          <section className="mt-16 border-t border-gray-100 pt-10">
+            <h2 className="mb-6 text-h2 font-bold text-greeva-black">Produk Serupa</h2>
+            <ProductGrid products={related} />
+          </section>
+        )}
+
+        {/* Pernah dilihat */}
+        <RecentlyViewed currentId={product.id} />
       </Container>
+
+      {/* Catat produk ini ke riwayat "pernah dilihat" (client, render null) */}
+      <TrackRecentlyViewed
+        product={{
+          id: product.id,
+          slug: product.slug,
+          name: product.name,
+          image: product.images[0] ?? null,
+          price: product.price,
+        }}
+      />
     </main>
   );
 }

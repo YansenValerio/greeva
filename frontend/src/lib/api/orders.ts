@@ -10,6 +10,7 @@ export async function checkout(payload: CheckoutPayload): Promise<CheckoutResult
 export async function getOrders(params?: {
   status?: string;
   per_page?: number;
+  page?: number;
 }): Promise<ApiCollection<Order>> {
   const { data } = await client.get<ApiCollection<Order>>('/orders', { params });
   return data;

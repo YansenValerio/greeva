@@ -26,6 +26,8 @@ class OrderResource extends JsonResource
             'subtotal_formatted'      => Money::format($this->subtotal),
             'shipping_total'          => $this->shipping_total,
             'shipping_total_formatted' => Money::format($this->shipping_total),
+            'shipping_courier'        => $this->shipping_courier,
+            'shipping_service'        => $this->shipping_service,
             'discount_total'          => $this->discount_total,
             'grand_total'             => $this->grand_total,
             'grand_total_formatted'   => Money::format($this->grand_total),
