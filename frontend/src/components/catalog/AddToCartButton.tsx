@@ -5,6 +5,7 @@ import axios from 'axios';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/stores/cart.store';
 import { useCartUiStore } from '@/stores/cart-ui.store';
+import { StockAlertForm } from '@/components/catalog/StockAlertForm';
 import type { ProductVariant } from '@/types/product';
 
 interface AddToCartButtonProps {
@@ -115,6 +116,11 @@ export function AddToCartButton({ variants, defaultPrice, totalStock }: AddToCar
                 : 'Tambah ke Keranjang'}
         </button>
       </div>
+
+      {/* Notifikasi stok untuk varian yang habis */}
+      {outOfStock && selected && (
+        <StockAlertForm key={selected.id} variantId={selected.id} />
+      )}
 
       {effectivePrice > 0 && activeVariants.length > 1 && selected && selected.price && (
         <p className="text-xs text-gray-500">

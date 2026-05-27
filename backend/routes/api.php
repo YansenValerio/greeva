@@ -70,6 +70,12 @@ Route::prefix('v1')->group(function () {
     Route::get('products/{slug}/related', [PublicProductController::class, 'related']);
     Route::get('products/{slug}/reviews', [\App\Http\Controllers\Api\V1\Public\ProductReviewController::class, 'index']);
 
+    // ── Public — Stock alert ("beritahu saya saat tersedia") ────────────────
+    Route::middleware('throttle:10,1')->post(
+        'stock-alerts',
+        [\App\Http\Controllers\Api\V1\Public\StockAlertController::class, 'store'],
+    );
+
     // ── Public — Midtrans webhook ───────────────────────────────────────────
     Route::post('payment/webhook', [PaymentController::class, 'handle']);
 
@@ -96,6 +102,9 @@ Route::prefix('v1')->group(function () {
 
             // Dashboard overview
             Route::get('dashboard', [Admin\DashboardController::class, 'index']);
+
+            // Audit log viewer (read-only) — riwayat perubahan entitas sensitif
+            Route::get('audit-logs', [Admin\AuditLogController::class, 'index']);
 
             // Category management
             Route::get('categories', [Admin\CategoryController::class, 'index']);

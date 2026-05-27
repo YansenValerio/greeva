@@ -10,6 +10,7 @@ const ADMIN_NAV = [
   { label: 'Pesanan', href: '/admin/orders' },
   { label: 'Mitra', href: '/admin/partners' },
   { label: 'Payout', href: '/admin/payouts' },
+  { label: 'Audit Log', href: '/admin/audit-logs' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -12,6 +12,34 @@ export async function adminGetDashboard(): Promise<AdminDashboard> {
   return data.data;
 }
 
+// Audit log
+export interface AuditLog {
+  id: number;
+  event: string;
+  auditable_type: string;
+  auditable_label: string;
+  auditable_id: number;
+  actor: { id: number; name: string; email: string } | null;
+  old_values: Record<string, unknown> | null;
+  new_values: Record<string, unknown> | null;
+  ip_address: string | null;
+  created_at: string;
+}
+
+export interface AuditLogParams {
+  page?: number;
+  per_page?: number;
+  event?: string;
+  auditable_type?: string;
+}
+
+export async function adminGetAuditLogs(
+  params?: AuditLogParams,
+): Promise<ApiCollection<AuditLog>> {
+  const { data } = await client.get<ApiCollection<AuditLog>>('/admin/audit-logs', { params });
+  return data;
+}
+
 export interface AdminProductParams {
   page?: number;
   per_page?: number;

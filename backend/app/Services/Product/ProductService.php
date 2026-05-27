@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Product;
 
 use App\Enums\ProductStatus;
+use App\Events\ProductRestocked;
 use App\Models\Partner;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -320,6 +321,11 @@ class ProductService
         AuditLogger::log('updated', $variant, $old, $variant->fresh()->only(array_keys($old)));
 
         $this->inventoryService->logManualAdjustment($variant, $stockOld, $variant->stock);
+
+        // Restock: stok dari 0 (atau minus) menjadi tersedia → kabari subscriber.
+        if ($stockOld <= 0 && $variant->stock > 0) {
+            ProductRestocked::dispatch($variant);
+        }
 
         return $variant->fresh();
     }
