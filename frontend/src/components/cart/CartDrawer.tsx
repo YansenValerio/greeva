@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, X } from 'lucide-react';
 import { Price } from '@/components/shared/Price';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { CartItemRow } from '@/components/cart/CartItemRow';
 import { useCartStore } from '@/stores/cart.store';
 import { useCartUiStore } from '@/stores/cart-ui.store';
@@ -77,19 +78,13 @@ export function CartDrawer() {
 
         {/* Body */}
         {items.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-            <ShoppingBag className="mb-4 h-14 w-14 text-gray-200" />
-            <p className="font-medium text-greeva-black">Keranjang kosong</p>
-            <p className="mt-1 text-sm text-gray-500">
-              Yuk, mulai belanja produk hijau lokal.
-            </p>
-            <Link
-              href="/shop"
-              onClick={closeCart}
-              className="mt-5 inline-flex rounded-pill bg-greeva-forest px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-greeva-starbucks-green"
-            >
-              Lihat Produk
-            </Link>
+          <div className="flex flex-1 items-center justify-center px-6">
+            <EmptyState
+              icon={ShoppingBag}
+              title="Keranjang kosong"
+              description="Yuk, mulai belanja produk hijau lokal."
+              action={{ label: 'Lihat Produk', href: '/shop', onClick: closeCart }}
+            />
           </div>
         ) : (
           <>

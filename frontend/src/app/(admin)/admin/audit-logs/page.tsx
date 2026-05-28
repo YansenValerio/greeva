@@ -1,9 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { History } from 'lucide-react';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Pagination } from '@/components/shared/Pagination';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ListSkeleton } from '@/components/shared/Skeleton';
 import { adminGetAuditLogs, type AuditLog } from '@/lib/api/admin';
 import type { PaginationMeta } from '@/types/api';
 
@@ -155,11 +158,13 @@ export default function AdminAuditLogsPage() {
       </div>
 
       {loading ? (
-        <div className="animate-pulse space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-16 rounded-card bg-gray-100" />)}
-        </div>
+        <ListSkeleton rows={5} />
       ) : logs.length === 0 ? (
-        <p className="py-10 text-center text-sm text-gray-400">Tidak ada riwayat.</p>
+        <EmptyState
+          icon={History}
+          title="Tidak ada riwayat"
+          description="Audit log untuk entity sensitif (order, payout, mitra) akan muncul di sini."
+        />
       ) : (
         <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
           {logs.map((log) => {

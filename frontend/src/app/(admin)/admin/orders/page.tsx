@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ShoppingCart } from 'lucide-react';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Pagination } from '@/components/shared/Pagination';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ListSkeleton } from '@/components/shared/Skeleton';
 import { adminGetOrders, adminBulkUpdateOrderStatus } from '@/lib/api/admin';
 import { toast, confirm } from '@/lib/feedback';
 import type { Order } from '@/types/order';
@@ -175,11 +178,13 @@ export default function AdminOrdersPage() {
       )}
 
       {loading ? (
-        <div className="animate-pulse space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-16 rounded-card bg-gray-100" />)}
-        </div>
+        <ListSkeleton rows={5} />
       ) : orders.length === 0 ? (
-        <p className="py-10 text-center text-sm text-gray-400">Tidak ada pesanan.</p>
+        <EmptyState
+          icon={ShoppingCart}
+          title="Tidak ada pesanan"
+          description="Pesanan yang masuk akan muncul di sini."
+        />
       ) : (
         <div className="rounded-card bg-white shadow-card">
           <label className="flex items-center gap-3 border-b border-gray-100 px-5 py-3 text-xs font-medium uppercase tracking-[0.08em] text-gray-400">
@@ -193,14 +198,14 @@ export default function AdminOrdersPage() {
           </label>
           <div className="divide-y divide-gray-100">
             {orders.map((o) => (
-              <div key={o.id} className="flex items-center gap-4 px-5 py-4">
+              <div key={o.id} className="flex flex-wrap items-center gap-3 px-4 py-4 sm:gap-4 sm:px-5">
                 <input
                   type="checkbox"
                   checked={selected.has(o.id)}
                   onChange={() => toggle(o.id)}
                   className="h-4 w-4 rounded border-gray-300 text-greeva-forest focus:ring-greeva-leaf"
                 />
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1 basis-full sm:basis-auto">
                   <p className="font-medium text-greeva-black">{o.order_number}</p>
                   <p className="text-xs text-gray-400">
                     {new Date(o.created_at).toLocaleDateString('id-ID', {
@@ -212,7 +217,7 @@ export default function AdminOrdersPage() {
                     {o.shipping_name}
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-3">
+                <div className="ml-auto flex shrink-0 flex-wrap items-center gap-2 sm:gap-3">
                   <Price cents={o.grand_total} className="text-sm font-semibold text-greeva-forest-dark" />
                   <Badge variant={STATUS_BADGE[o.status] ?? 'gray'}>{o.status_label}</Badge>
                   <Link

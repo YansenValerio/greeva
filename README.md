@@ -227,6 +227,14 @@ pnpm dev                   # http://localhost:3000
 - [x] Catatan: conversion rate & traffic (#19) dan bulk message ke buyer (#27) di-skip — butuh sistem pelacakan view & messaging broadcast yang belum ada
 - [x] Tes: `AdminDashboardServiceTest` (6) + `BulkStatusUpdateTest` (3). Total backend: 77 tes hijau
 
+### Step 19 — UX Polish: Empty States, Skeleton, Mobile, Image Lightbox ✅
+- [x] **`<EmptyState />`** — komponen reusable (icon Lucide opsional, title, description, primary + secondary action sebagai href/onClick, 3 size). Refactor 15 call site (cart, orders, wishlist, addresses, partner & admin lists, ReviewList) jadi konsisten dengan icon + CTA yang jelas
+- [x] **`<Skeleton />` set** — primitif `Skeleton` (rect/pill/circle/text) + `ProductCardSkeleton`, `ProductGridSkeleton`, `OrderRowSkeleton`, `TableSkeleton`, `ListSkeleton`, `PageHeaderSkeleton`, `KpiCardSkeleton`. Menggantikan 12 inline `animate-pulse div` di berbagai halaman
+- [x] **Mobile navbar hamburger** — tombol Menu di viewport `<md`, drawer slide-in dari kanan (link nav, akun/login/logout), Escape & backdrop tap untuk tutup, body scroll dikunci saat terbuka
+- [x] **Dashboard Sidebar adaptif** — horizontal pill tabs scrollable di mobile/tablet (`<lg`), vertical sidebar di desktop. `DashboardShell` ikut adjust padding & gap
+- [x] **Admin tables responsive** — list row `/admin/products` & `/admin/orders` pakai `flex-wrap` + basis trick supaya info naik baris atas dan aksi/badge tetap kanan saat mobile
+- [x] **Product image lightbox** — `ProductImageLightbox` modal full-screen dengan keyboard nav (Esc/←/→), swipe via Pointer Events, dot indicator mobile, counter `n / total`. Main gallery jadi `<button>` click-to-zoom dengan hover badge "Perbesar". Zero dependency baru
+
 ### Backlog
 - [ ] _(lihat [IMPROVEMENTS.md](IMPROVEMENTS.md) untuk daftar peningkatan lanjutan)_
 

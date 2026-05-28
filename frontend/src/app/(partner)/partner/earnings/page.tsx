@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Coins } from 'lucide-react';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Pagination } from '@/components/shared/Pagination';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ListSkeleton } from '@/components/shared/Skeleton';
 import { getPartnerEarnings, getPartnerEarningSummary } from '@/lib/api/partner';
 import type { PartnerEarning, EarningSummary } from '@/types/partner';
 import type { PaginationMeta } from '@/types/api';
@@ -94,11 +97,13 @@ export default function PartnerEarningsPage() {
       </div>
 
       {loading ? (
-        <div className="animate-pulse space-y-2">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="h-14 rounded-card bg-gray-100" />)}
-        </div>
+        <ListSkeleton rows={4} height="h-14" />
       ) : earnings.length === 0 ? (
-        <p className="py-10 text-center text-sm text-gray-400">Tidak ada data pendapatan.</p>
+        <EmptyState
+          icon={Coins}
+          title="Belum ada pendapatan"
+          description="Pendapatan akan muncul setelah pesananmu masuk fase completed."
+        />
       ) : (
         <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
           {earnings.map((e) => (

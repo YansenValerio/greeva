@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Package } from 'lucide-react';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Pagination } from '@/components/shared/Pagination';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Skeleton, ListSkeleton } from '@/components/shared/Skeleton';
 import { getPartnerProducts, submitPartnerProduct, deletePartnerProduct } from '@/lib/api/partner';
 import { toast, confirm } from '@/lib/feedback';
 import type { Product } from '@/types/product';
@@ -77,9 +80,9 @@ export default function PartnerProductsPage() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-8 w-48 rounded bg-gray-200" />
-        {[1, 2, 3].map((i) => <div key={i} className="h-16 rounded-card bg-gray-100" />)}
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <ListSkeleton rows={4} />
       </div>
     );
   }
@@ -99,12 +102,12 @@ export default function PartnerProductsPage() {
       />
 
       {products.length === 0 ? (
-        <div className="py-16 text-center">
-          <p className="text-gray-400">Belum ada produk.</p>
-          <Link href="/partner/products/new" className="mt-3 inline-block text-sm text-greeva-starbucks-green hover:underline">
-            Tambah produk pertama →
-          </Link>
-        </div>
+        <EmptyState
+          icon={Package}
+          title="Belum ada produk"
+          description="Mulai dengan menambah produk pertamamu untuk dijual via Greeva."
+          action={{ label: 'Tambah Produk', href: '/partner/products/new' }}
+        />
       ) : (
         <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
           {products.map((p) => (

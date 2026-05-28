@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { ShoppingBag, LogOut, User, Search, X } from 'lucide-react';
+import { ShoppingBag, LogOut, User, Search, X, Menu } from 'lucide-react';
 import { Container } from '@/components/shared/Container';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
@@ -19,6 +19,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -37,11 +38,23 @@ export function Navbar() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSearchOpen(false);
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+        setMobileMenuOpen(false);
+      }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileMenuOpen]);
 
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -210,9 +223,106 @@ export function Navbar() {
             ) : (
               <div className="hidden h-8 w-16 animate-pulse rounded-pill bg-white/20 md:block" />
             )}
+
+            {/* Mobile hamburger */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Buka menu"
+              className="text-white/80 hover:text-white transition-colors md:hidden"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
           </div>
         </div>
       </Container>
+
+      {/* Mobile menu drawer */}
+      <div
+        className={`fixed inset-0 z-[200] md:hidden ${
+          mobileMenuOpen ? '' : 'pointer-events-none'
+        }`}
+        aria-hidden={!mobileMenuOpen}
+      >
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${
+            mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+        <aside
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu navigasi"
+          className={`absolute right-0 top-0 flex h-full w-full max-w-xs flex-col bg-white text-greeva-black shadow-card-hover transition-transform duration-300 ${
+            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+            <span className="text-lg font-bold tracking-tight text-greeva-emerald">Greeva</span>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              aria-label="Tutup menu"
+              className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <nav className="flex-1 overflow-y-auto py-3" aria-label="Navigasi utama">
+            {[
+              { href: '/shop', label: 'Toko' },
+              { href: '/mitra', label: 'Mitra' },
+              { href: '/cerita', label: 'Cerita' },
+              { href: '/about', label: 'Tentang' },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-5 py-3 text-base font-medium text-greeva-black hover:bg-greeva-mint-light/50"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="border-t border-gray-100 px-5 py-4">
+            {hydrated && isAuthenticated ? (
+              <div className="space-y-2">
+                <Link
+                  href="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 rounded-lg bg-greeva-mint-light/40 px-4 py-3 text-sm font-medium text-greeva-forest-dark"
+                >
+                  <User className="h-4 w-4" />
+                  <span className="truncate">{user?.name}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Keluar
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block w-full rounded-pill bg-greeva-forest py-3 text-center text-sm font-semibold text-white hover:bg-greeva-starbucks-green"
+              >
+                Masuk
+              </Link>
+            )}
+          </div>
+        </aside>
+      </div>
     </header>
   );
 }

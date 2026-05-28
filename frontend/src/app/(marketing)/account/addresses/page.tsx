@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 import { Container } from '@/components/shared/Container';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { useAuthStore } from '@/stores/auth.store';
 import { useHydrated } from '@/hooks/useHydrated';
 import {
@@ -355,16 +357,13 @@ export default function AccountAddressesPage() {
         )}
 
         {addresses.length === 0 && !showForm ? (
-          <div className="rounded-card bg-white py-16 text-center shadow-card">
-            <p className="text-sm text-gray-400">
-              Belum ada alamat tersimpan. Tambahkan alamat untuk checkout lebih cepat.
-            </p>
-            <button
-              onClick={startAdd}
-              className="mt-4 rounded-pill bg-greeva-forest px-5 py-2.5 text-sm font-semibold text-white hover:bg-greeva-starbucks-green"
-            >
-              + Tambah Alamat Pertama
-            </button>
+          <div className="rounded-card bg-white shadow-card">
+            <EmptyState
+              icon={MapPin}
+              title="Belum ada alamat"
+              description="Tambahkan alamat untuk checkout lebih cepat."
+              action={{ label: '+ Tambah Alamat Pertama', onClick: startAdd }}
+            />
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

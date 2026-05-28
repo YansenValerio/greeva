@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { LayoutDashboard } from 'lucide-react';
 import { Price } from '@/components/shared/Price';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Skeleton, KpiCardSkeleton } from '@/components/shared/Skeleton';
 import { adminGetDashboard } from '@/lib/api/admin';
 import type { AdminDashboard } from '@/types/admin';
 
@@ -32,14 +35,14 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-6">
-        <div className="h-8 w-56 rounded bg-gray-200" />
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-56" />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 rounded-card bg-gray-100" />
+            <KpiCardSkeleton key={i} />
           ))}
         </div>
-        <div className="h-64 rounded-card bg-gray-100" />
+        <Skeleton className="h-64 rounded-card" />
       </div>
     );
   }
@@ -48,7 +51,11 @@ export default function AdminDashboardPage() {
     return (
       <div>
         <PageHeader title="Admin Greeva" />
-        <p className="py-10 text-center text-sm text-gray-400">Gagal memuat data dashboard.</p>
+        <EmptyState
+          icon={LayoutDashboard}
+          title="Gagal memuat dashboard"
+          description="Data dashboard tidak dapat dimuat. Coba muat ulang halaman."
+        />
       </div>
     );
   }
@@ -134,7 +141,9 @@ export default function AdminDashboardPage() {
         <div>
           <h2 className="mb-4 text-h3 font-semibold text-greeva-black">Mitra Teratas</h2>
           {top_partners.length === 0 ? (
-            <p className="py-6 text-center text-sm text-gray-400">Belum ada penjualan.</p>
+            <div className="rounded-card bg-white py-8 text-center text-sm text-gray-400 shadow-card">
+              Belum ada penjualan.
+            </div>
           ) : (
             <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
               {top_partners.map((p, i) => (
@@ -155,7 +164,9 @@ export default function AdminDashboardPage() {
         <div>
           <h2 className="mb-4 text-h3 font-semibold text-greeva-black">Kategori Teratas</h2>
           {top_categories.length === 0 ? (
-            <p className="py-6 text-center text-sm text-gray-400">Belum ada penjualan.</p>
+            <div className="rounded-card bg-white py-8 text-center text-sm text-gray-400 shadow-card">
+              Belum ada penjualan.
+            </div>
           ) : (
             <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
               {top_categories.map((c, i) => (

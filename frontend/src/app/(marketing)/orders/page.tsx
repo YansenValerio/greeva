@@ -3,10 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Receipt } from 'lucide-react';
 import { Container } from '@/components/shared/Container';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { Pagination } from '@/components/shared/Pagination';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Skeleton, OrderRowSkeleton } from '@/components/shared/Skeleton';
 import { getOrders } from '@/lib/api/orders';
 import { useAuthStore } from '@/stores/auth.store';
 import { useHydrated } from '@/hooks/useHydrated';
@@ -55,10 +58,10 @@ export default function OrdersPage() {
     return (
       <main className="py-10 md:py-14">
         <Container>
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 w-48 rounded bg-gray-200" />
+          <Skeleton className="mb-8 h-8 w-48" />
+          <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 rounded-card bg-gray-100" />
+              <OrderRowSkeleton key={i} />
             ))}
           </div>
         </Container>
@@ -72,12 +75,13 @@ export default function OrdersPage() {
         <h1 className="mb-8 text-h1 font-bold text-greeva-black">Pesanan Saya</h1>
 
         {orders.length === 0 ? (
-          <div className="py-20 text-center">
-            <p className="text-lg text-gray-500">Belum ada pesanan.</p>
-            <Link href="/shop" className="mt-4 inline-block text-sm text-greeva-starbucks-green hover:underline">
-              Mulai belanja →
-            </Link>
-          </div>
+          <EmptyState
+            icon={Receipt}
+            size="lg"
+            title="Belum ada pesanan"
+            description="Pesanan yang kamu buat akan muncul di sini."
+            action={{ label: 'Mulai Belanja', href: '/shop' }}
+          />
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (

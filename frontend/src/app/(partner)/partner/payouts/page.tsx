@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Wallet } from 'lucide-react';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Pagination } from '@/components/shared/Pagination';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Skeleton, ListSkeleton } from '@/components/shared/Skeleton';
 import { getPartnerPayouts } from '@/lib/api/partner';
 import type { PayoutBatch } from '@/types/partner';
 import type { PaginationMeta } from '@/types/api';
@@ -36,9 +39,9 @@ export default function PartnerPayoutsPage() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-8 w-48 rounded bg-gray-200" />
-        {[1, 2, 3].map((i) => <div key={i} className="h-16 rounded-card bg-gray-100" />)}
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <ListSkeleton rows={4} />
       </div>
     );
   }
@@ -48,7 +51,11 @@ export default function PartnerPayoutsPage() {
       <PageHeader title="Riwayat Payout" />
 
       {payouts.length === 0 ? (
-        <p className="py-10 text-center text-sm text-gray-400">Belum ada payout.</p>
+        <EmptyState
+          icon={Wallet}
+          title="Belum ada payout"
+          description="Payout akan muncul setelah earning mitra masuk batch pembayaran."
+        />
       ) : (
         <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
           {payouts.map((p) => (

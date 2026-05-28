@@ -1,9 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { History } from 'lucide-react';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Pagination } from '@/components/shared/Pagination';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ListSkeleton } from '@/components/shared/Skeleton';
 import { getPartnerInventoryLogs, getPartnerProducts } from '@/lib/api/partner';
 import type { InventoryLog, InventoryReason } from '@/types/partner';
 import type { Product } from '@/types/product';
@@ -106,15 +109,14 @@ export default function PartnerInventoryPage() {
       </div>
 
       {loading ? (
-        <div className="animate-pulse space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-16 rounded-card bg-gray-100" />
-          ))}
-        </div>
+        <ListSkeleton rows={5} />
       ) : logs.length === 0 ? (
-        <p className="py-10 text-center text-sm text-gray-400">
-          Belum ada riwayat perubahan stok.
-        </p>
+        <EmptyState
+          icon={History}
+          size="sm"
+          title="Belum ada riwayat stok"
+          description="Perubahan stok varian (penjualan, pengembalian, penyesuaian) akan tercatat di sini."
+        />
       ) : (
         <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
           {logs.map((log) => (

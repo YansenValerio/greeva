@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { TrendingUp } from 'lucide-react';
 import { Price } from '@/components/shared/Price';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Skeleton, KpiCardSkeleton } from '@/components/shared/Skeleton';
 import { getPartnerAnalytics } from '@/lib/api/partner';
 import type { PartnerAnalytics } from '@/types/partner';
 
@@ -25,14 +28,14 @@ export default function PartnerAnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-6">
-        <div className="h-8 w-48 rounded bg-gray-200" />
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-24 rounded-card bg-gray-100" />
+            <KpiCardSkeleton key={i} />
           ))}
         </div>
-        <div className="h-64 rounded-card bg-gray-100" />
+        <Skeleton className="h-64 rounded-card" />
       </div>
     );
   }
@@ -41,7 +44,11 @@ export default function PartnerAnalyticsPage() {
     return (
       <div>
         <PageHeader title="Analitik" />
-        <p className="py-10 text-center text-sm text-gray-400">Gagal memuat data analitik.</p>
+        <EmptyState
+          icon={TrendingUp}
+          title="Gagal memuat data"
+          description="Data analitik tidak dapat dimuat. Coba muat ulang halaman."
+        />
       </div>
     );
   }
@@ -135,9 +142,12 @@ export default function PartnerAnalyticsPage() {
       <div className="mt-10">
         <h2 className="mb-4 text-h3 font-semibold text-greeva-black">Produk Terlaris</h2>
         {top_products.length === 0 ? (
-          <p className="py-6 text-center text-sm text-gray-400">
-            Belum ada penjualan. Produk terlaris akan muncul di sini.
-          </p>
+          <EmptyState
+            icon={TrendingUp}
+            size="sm"
+            title="Belum ada penjualan"
+            description="Produk terlaris akan muncul di sini setelah ada transaksi."
+          />
         ) : (
           <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
             {top_products.map((p, i) => (

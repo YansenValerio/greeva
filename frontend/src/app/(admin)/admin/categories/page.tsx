@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { FolderTree } from 'lucide-react';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ListSkeleton } from '@/components/shared/Skeleton';
 import {
   adminGetCategories,
   adminCreateCategory,
@@ -266,14 +269,15 @@ export default function AdminCategoriesPage() {
         {/* List */}
         <div className="lg:col-span-2">
           {loading ? (
-            <div className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-14 animate-pulse rounded-card bg-gray-100" />
-              ))}
-            </div>
+            <ListSkeleton rows={4} height="h-14" />
           ) : tree.length === 0 ? (
-            <div className="rounded-card bg-white py-10 text-center shadow-card">
-              <p className="text-sm text-gray-400">Belum ada kategori. Tambahkan di form sebelah.</p>
+            <div className="rounded-card bg-white shadow-card">
+              <EmptyState
+                icon={FolderTree}
+                size="sm"
+                title="Belum ada kategori"
+                description="Tambahkan kategori pertama melalui form di sebelah."
+              />
             </div>
           ) : (
             <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">

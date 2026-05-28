@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { Skeleton, KpiCardSkeleton } from '@/components/shared/Skeleton';
 import { getPartnerEarningSummary, getPartnerPayouts } from '@/lib/api/partner';
 import type { EarningSummary, PayoutBatch } from '@/types/partner';
 
@@ -36,10 +37,10 @@ export default function PartnerDashboardPage() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-6">
-        <div className="h-8 w-48 rounded bg-gray-200" />
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => <div key={i} className="h-28 rounded-card bg-gray-100" />)}
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {[1, 2, 3].map((i) => <KpiCardSkeleton key={i} />)}
         </div>
       </div>
     );
@@ -86,7 +87,9 @@ export default function PartnerDashboardPage() {
         </div>
 
         {payouts.length === 0 ? (
-          <p className="text-sm text-gray-400">Belum ada riwayat payout.</p>
+          <div className="rounded-card bg-white py-8 text-center text-sm text-gray-400 shadow-card">
+            Belum ada riwayat payout.
+          </div>
         ) : (
           <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
             {payouts.map((p) => (

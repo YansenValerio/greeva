@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Users } from 'lucide-react';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Pagination } from '@/components/shared/Pagination';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Skeleton, ListSkeleton } from '@/components/shared/Skeleton';
 import { adminGetPartners } from '@/lib/api/admin';
 import type { Partner } from '@/types/partner';
 import type { PaginationMeta } from '@/types/api';
@@ -28,9 +31,9 @@ export default function AdminPartnersPage() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-8 w-48 rounded bg-gray-200" />
-        {[1, 2, 3].map((i) => <div key={i} className="h-16 rounded-card bg-gray-100" />)}
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <ListSkeleton rows={4} />
       </div>
     );
   }
@@ -40,7 +43,11 @@ export default function AdminPartnersPage() {
       <PageHeader title="Mitra" />
 
       {partners.length === 0 ? (
-        <p className="py-10 text-center text-sm text-gray-400">Belum ada mitra terdaftar.</p>
+        <EmptyState
+          icon={Users}
+          title="Belum ada mitra"
+          description="Daftar mitra konsinyasi akan muncul di sini."
+        />
       ) : (
         <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
           {partners.map((p) => (

@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Package } from 'lucide-react';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Pagination } from '@/components/shared/Pagination';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ListSkeleton } from '@/components/shared/Skeleton';
 import { adminGetProducts, adminBulkUpdateProductStatus } from '@/lib/api/admin';
 import { toast, confirm } from '@/lib/feedback';
 import type { Product } from '@/types/product';
@@ -160,11 +163,13 @@ export default function AdminProductsPage() {
       )}
 
       {loading ? (
-        <div className="animate-pulse space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-14 rounded-card bg-gray-100" />)}
-        </div>
+        <ListSkeleton rows={5} height="h-14" />
       ) : products.length === 0 ? (
-        <p className="py-10 text-center text-sm text-gray-400">Tidak ada produk.</p>
+        <EmptyState
+          icon={Package}
+          title="Tidak ada produk"
+          description="Produk yang diajukan mitra atau ditambah admin akan muncul di sini."
+        />
       ) : (
         <div className="rounded-card bg-white shadow-card">
           <label className="flex items-center gap-3 border-b border-gray-100 px-5 py-3 text-xs font-medium uppercase tracking-[0.08em] text-gray-400">
@@ -178,21 +183,21 @@ export default function AdminProductsPage() {
           </label>
           <div className="divide-y divide-gray-100">
             {products.map((p) => (
-              <div key={p.id} className="flex items-center gap-4 px-5 py-4">
+              <div key={p.id} className="flex flex-wrap items-center gap-3 px-4 py-4 sm:gap-4 sm:px-5">
                 <input
                   type="checkbox"
                   checked={selected.has(p.id)}
                   onChange={() => toggle(p.id)}
                   className="h-4 w-4 rounded border-gray-300 text-greeva-forest focus:ring-greeva-leaf"
                 />
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1 basis-full sm:basis-auto">
                   <p className="truncate font-medium text-greeva-black">{p.name}</p>
-                  <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-400">
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-400">
                     {p.partner && <span>{p.partner.name}</span>}
                     <Price cents={p.price} className="text-greeva-forest-dark" />
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-3">
+                <div className="ml-auto flex shrink-0 flex-wrap items-center gap-2 sm:gap-3">
                   <Badge variant={STATUS_BADGE[p.status] ?? 'gray'}>{p.status_label}</Badge>
                   <Link
                     href={`/admin/products/${p.id}`}

@@ -226,7 +226,7 @@ export default function AdminPartnerDetailPage() {
             </div>
             {earnings.length === 0 ? (
               <p className="px-6 py-10 text-center text-sm text-gray-400">
-                Belum ada earning untuk mitra ini.
+                Belum ada earning untuk mitra ini
               </p>
             ) : (
               <div className="divide-y divide-gray-100">

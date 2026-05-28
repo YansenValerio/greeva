@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { ShoppingBag } from 'lucide-react';
 import { Container } from '@/components/shared/Container';
 import { Price } from '@/components/shared/Price';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Skeleton } from '@/components/shared/Skeleton';
 import { CartItemRow } from '@/components/cart/CartItemRow';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
@@ -24,14 +26,14 @@ export default function CartPage() {
     return (
       <main className="py-10 md:py-14">
         <Container>
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 w-48 rounded bg-gray-200" />
+          <Skeleton className="mb-6 h-8 w-48" />
+          <div className="space-y-4">
             {[1, 2].map((i) => (
-              <div key={i} className="flex gap-4 py-5 border-b">
-                <div className="h-20 w-20 rounded-lg bg-gray-200" />
+              <div key={i} className="flex gap-4 border-b py-5">
+                <Skeleton className="h-20 w-20 rounded-lg" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-1/2 rounded bg-gray-200" />
-                  <div className="h-4 w-1/3 rounded bg-gray-200" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-1/3" />
                 </div>
               </div>
             ))}
@@ -45,19 +47,13 @@ export default function CartPage() {
     return (
       <main className="flex min-h-[60vh] items-center">
         <Container>
-          <div className="mx-auto max-w-sm text-center">
-            <ShoppingBag className="mx-auto mb-4 h-16 w-16 text-gray-200" />
-            <h1 className="text-xl font-bold text-greeva-black">Keranjang kosong</h1>
-            <p className="mt-2 text-sm text-gray-500">
-              Belum ada produk di keranjangmu. Yuk, mulai belanja!
-            </p>
-            <Link
-              href="/shop"
-              className="mt-6 inline-flex items-center justify-center rounded-pill bg-greeva-forest px-8 py-3.5 text-base font-semibold text-white transition-all hover:bg-greeva-starbucks-green"
-            >
-              Lihat Produk
-            </Link>
-          </div>
+          <EmptyState
+            icon={ShoppingBag}
+            size="lg"
+            title="Keranjang kosong"
+            description="Belum ada produk di keranjangmu. Yuk, mulai belanja!"
+            action={{ label: 'Lihat Produk', href: '/shop' }}
+          />
         </Container>
       </main>
     );

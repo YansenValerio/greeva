@@ -39,25 +39,36 @@ Buyer harus isi alamat dari nol setiap checkout. Tabel `addresses` + UI di `/acc
 
 ## Tampilan / UX Polish
 
-### 7. Empty States Konsisten
+### 7. Empty States Konsisten ✅
 Sekarang setiap "list kosong" beda style — beberapa pakai icon, beberapa cuma text. Bikin komponen `<EmptyState icon label description action />` reusable.
+
+**Done:** `components/shared/EmptyState.tsx` (icon Lucide opsional, title, description, primary + secondary action sebagai href atau onClick, 3 size sm/md/lg). Refactor 15 call site: cart drawer, cart page, orders, wishlist, addresses, partner products/payouts/inventory/analytics/earnings, admin products/orders/partners/payouts/categories/dashboard/audit-logs, ReviewList.
 
 ### 8. Confirmation Modal Reusable ✅
 Banyak pakai `confirm()` native browser ("Hapus kategori X?"). Tampilan jelek di mobile, tidak match brand. Bikin `<ConfirmDialog />` pakai Shadcn dialog.
 
 **Done:** `confirm.store` + `<ConfirmDialog />` modal centered, API imperatif `await confirm({title, message, danger})`, refactor 6 call site (`admin/categories`, `admin/payouts` ×2, `account/addresses`, `partner/products`, `VariantManager`) — zero `window.confirm()` / `alert()` tersisa. Commit `328cbc7`.
 
-### 9. Loading Skeleton Konsisten
+### 9. Loading Skeleton Konsisten ✅
 Ada di beberapa halaman, missing di yang lain. Bikin set `<ProductCardSkeleton />`, `<OrderRowSkeleton />`, `<TableSkeleton />` standardized.
+
+**Done:** `components/shared/Skeleton.tsx` ekspor `Skeleton` (primitif rect/pill/circle/text), `ProductCardSkeleton`, `ProductGridSkeleton`, `OrderRowSkeleton`, `TableSkeleton`, `ListSkeleton`, `PageHeaderSkeleton`, `KpiCardSkeleton`. Refactor inline `animate-pulse div` di 12 halaman (cart, orders, wishlist, partner dashboard/products/payouts/inventory/analytics/earnings, admin dashboard/products/orders/partners/payouts/categories/audit-logs, ReviewList).
 
 ### 10. Pagination Component Real
 Saat ini cuma "Halaman 1 dari 5" — tidak ada navigation. Bikin `<Pagination />` dengan prev/next + jump-to-page + URL-synced.
 
-### 11. Mobile Responsiveness Audit
+### 11. Mobile Responsiveness Audit ✅
 Beberapa halaman admin/partner dashboard belum sepenuhnya mobile-friendly. Sidebar fixed di desktop tapi mobile harus ada hamburger. Tabel admin akan overflow di mobile.
 
-### 12. Product Image Zoom & Carousel
+**Done:**
+- **Navbar mobile hamburger** — tombol Menu di kanan untuk viewport `<md`, drawer slide-in dari kanan dengan link Toko/Mitra/Cerita/Tentang + akun/logout/login. Escape & backdrop tap untuk tutup, body scroll dikunci.
+- **Dashboard Sidebar adaptif** — di mobile/tablet `<lg` jadi horizontal pill tabs yang scrollable, di desktop `lg+` tetap vertical sidebar. `DashboardShell` ikut adjust padding (`py-6` mobile → `py-14` desktop, gap-4 → gap-8).
+- **Admin tables** — list row di `/admin/products` & `/admin/orders` pakai `flex-wrap` + `basis-full sm:basis-auto` + `ml-auto` supaya kolom info naik ke atas dan aksi/badge tetap kanan saat mobile.
+
+### 12. Product Image Zoom & Carousel ✅
 PDP image gallery dasar. Tambah click-to-zoom (lightbox) + swipe support mobile = standar e-commerce.
+
+**Done:** `ProductImageLightbox` modal full-screen (bg-black/90) dengan tombol prev/next (desktop), counter `n / total`, dot indicator (mobile), keyboard nav (Esc/←/→), swipe via Pointer Events (threshold 50px). `ProductImageGallery` main image jadi `<button>` (click-to-zoom dengan hover badge "Perbesar"), swipe gesture juga aktif di thumbnail utama, scale-105 di hover. Tanpa dependency tambahan.
 
 ---
 

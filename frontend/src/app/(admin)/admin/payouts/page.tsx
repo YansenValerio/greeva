@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Wallet } from 'lucide-react';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
 import {
   adminGetPayouts,
   adminGeneratePayout,
@@ -183,7 +185,11 @@ export default function AdminPayoutsPage() {
       )}
 
       {payouts.length === 0 ? (
-        <p className="py-10 text-center text-sm text-gray-400">Belum ada payout.</p>
+        <EmptyState
+          icon={Wallet}
+          title="Belum ada payout"
+          description="Generate payout dari tombol di atas untuk mulai membayar mitra."
+        />
       ) : (
         <div className="divide-y divide-gray-100 rounded-card bg-white shadow-card">
           {payouts.map((p) => (

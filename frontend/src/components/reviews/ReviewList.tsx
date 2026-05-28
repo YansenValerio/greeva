@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { MessageSquare } from 'lucide-react';
 import { StarRating } from './StarRating';
 import { Pagination } from '@/components/shared/Pagination';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ListSkeleton } from '@/components/shared/Skeleton';
 import {
   getProductReviews,
   type ReviewSort,
@@ -39,21 +42,18 @@ export function ReviewList({ slug }: ReviewListProps) {
   }
 
   if (loading && !data) {
-    return (
-      <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-20 animate-pulse rounded-card bg-gray-100" />
-        ))}
-      </div>
-    );
+    return <ListSkeleton rows={3} height="h-20" />;
   }
 
   if (!data || data.data.length === 0) {
     return (
-      <div className="rounded-card bg-greeva-mint-light/40 py-10 text-center">
-        <p className="text-sm text-gray-500">
-          Belum ada ulasan. Jadilah yang pertama setelah membeli produk ini.
-        </p>
+      <div className="rounded-card bg-greeva-mint-light/40">
+        <EmptyState
+          icon={MessageSquare}
+          size="sm"
+          title="Belum ada ulasan"
+          description="Jadilah yang pertama mengulas setelah membeli produk ini."
+        />
       </div>
     );
   }

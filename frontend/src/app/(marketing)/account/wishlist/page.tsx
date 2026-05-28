@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Heart } from 'lucide-react';
 import { Container } from '@/components/shared/Container';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Skeleton, ProductGridSkeleton } from '@/components/shared/Skeleton';
 import { ProductGrid } from '@/components/catalog/ProductGrid';
 import { useAuthStore } from '@/stores/auth.store';
 import { useWishlistStore } from '@/stores/wishlist.store';
@@ -44,14 +46,8 @@ export default function AccountWishlistPage() {
     return (
       <main className="py-10 md:py-14">
         <Container>
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 w-48 rounded bg-gray-200" />
-            <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="aspect-square rounded-card bg-gray-100" />
-              ))}
-            </div>
-          </div>
+          <Skeleton className="mb-6 h-8 w-48" />
+          <ProductGridSkeleton count={4} />
         </Container>
       </main>
     );
@@ -74,19 +70,12 @@ export default function AccountWishlistPage() {
         </div>
 
         {visible.length === 0 ? (
-          <div className="py-16 text-center">
-            <Heart className="mx-auto mb-4 h-14 w-14 text-gray-200" />
-            <p className="font-medium text-greeva-black">Wishlist kosong</p>
-            <p className="mt-1 text-sm text-gray-500">
-              Tekan ikon hati pada produk untuk menyimpannya di sini.
-            </p>
-            <Link
-              href="/shop"
-              className="mt-6 inline-flex rounded-pill bg-greeva-forest px-8 py-3.5 text-base font-semibold text-white transition-colors hover:bg-greeva-starbucks-green"
-            >
-              Lihat Produk
-            </Link>
-          </div>
+          <EmptyState
+            icon={Heart}
+            title="Wishlist kosong"
+            description="Tekan ikon hati pada produk untuk menyimpannya di sini."
+            action={{ label: 'Lihat Produk', href: '/shop' }}
+          />
         ) : (
           <ProductGrid products={visible} />
         )}
