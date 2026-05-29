@@ -20,7 +20,6 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
   const items = categories.length > 0 ? categories.slice(0, 4) : fallbackCategories;
 
   const bgColors = ['#D1FAE5', '#F5F0E8', '#D1FAE5', '#32462F'];
-  const textColors = ['#32462F', '#32462F', '#32462F', '#ffffff'];
   const emojis = ['📿', '👜', '🏡', '💼'];
 
   return (
