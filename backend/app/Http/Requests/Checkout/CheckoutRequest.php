@@ -21,6 +21,7 @@ class CheckoutRequest extends FormRequest
             'shipping_courier'     => ['required', 'string', 'max:50'],
             'shipping_service'     => ['required', 'string', 'max:50'],
             'notes'                => ['nullable', 'string', 'max:500'],
+            'voucher_code'         => ['nullable', 'string', 'max:50'],
         ];
     }
 

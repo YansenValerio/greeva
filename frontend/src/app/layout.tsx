@@ -24,6 +24,11 @@ export const metadata: Metadata = {
     locale: 'id_ID',
     siteName: 'Greeva',
   },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@greevastore',
+  },
+  keywords: ['sustainable', 'green brand', 'produk ramah lingkungan', 'brand lokal indonesia', 'belanja hijau'],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

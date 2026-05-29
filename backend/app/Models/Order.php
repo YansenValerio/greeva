@@ -27,6 +27,8 @@ class Order extends Model
         'shipping_courier',
         'shipping_service',
         'discount_total',
+        'voucher_id',
+        'voucher_code',
         'grand_total',
         'shipping_name',
         'shipping_phone',
@@ -43,6 +45,7 @@ class Order extends Model
         'delivered_at',
         'completed_at',
         'cancelled_at',
+        'refunded_at',
         'notes',
     ];
 
@@ -59,6 +62,7 @@ class Order extends Model
             'delivered_at'        => 'datetime',
             'completed_at'        => 'datetime',
             'cancelled_at'        => 'datetime',
+            'refunded_at'         => 'datetime',
         ];
     }
 
@@ -82,6 +86,16 @@ class Order extends Model
     public function earnings(): HasMany
     {
         return $this->hasMany(PartnerEarning::class);
+    }
+
+    public function returnRequests(): HasMany
+    {
+        return $this->hasMany(ReturnRequest::class);
+    }
+
+    public function voucher(): BelongsTo
+    {
+        return $this->belongsTo(Voucher::class);
     }
 
     // ── Scopes ───────────────────────────────────────────────────────────────
@@ -129,6 +143,15 @@ class Order extends Model
     public function isCompleted(): bool
     {
         return $this->status === OrderStatus::Completed;
+    }
+
+    /** Retur hanya bisa diajukan setelah barang diterima/order selesai */
+    public function canRequestReturn(): bool
+    {
+        return in_array($this->status, [
+            OrderStatus::Delivered,
+            OrderStatus::Completed,
+        ], strict: true);
     }
 
     public function isGuest(): bool

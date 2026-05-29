@@ -10,8 +10,10 @@ import { Badge } from '@/components/shared/Badge';
 import { StarRating } from '@/components/reviews/StarRating';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { OrderTimeline } from '@/components/orders/OrderTimeline';
+import { ReturnRequestForm } from '@/components/orders/ReturnRequestForm';
 import { getCourierTrackUrl } from '@/lib/shipping';
 import { getOrder, cancelOrder } from '@/lib/api/orders';
+import { toast } from '@/lib/feedback';
 import { useAuthStore } from '@/stores/auth.store';
 import { useHydrated } from '@/hooks/useHydrated';
 import type { Order, OrderItem } from '@/types/order';
@@ -44,6 +46,8 @@ export default function OrderDetailPage() {
   const [cancelReason, setCancelReason] = useState('');
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState('');
+
+  const [returnOpen, setReturnOpen] = useState(false);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -372,6 +376,28 @@ export default function OrderDetailPage() {
                     </button>
                   </div>
                 </div>
+              )}
+
+              {/* Ajukan retur */}
+              {order.can_request_return && !returnOpen && (
+                <button
+                  onClick={() => setReturnOpen(true)}
+                  className="mt-3 block w-full rounded-pill border border-amber-300 py-2.5 text-center text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors"
+                >
+                  Ajukan Retur
+                </button>
+              )}
+
+              {returnOpen && (
+                <ReturnRequestForm
+                  orderNumber={order.order_number}
+                  onSuccess={() => {
+                    setReturnOpen(false);
+                    setOrder((prev) => (prev ? { ...prev, can_request_return: false } : prev));
+                    toast.success('Pengajuan retur terkirim. Admin akan meninjau dalam 1×24 jam.');
+                  }}
+                  onCancel={() => setReturnOpen(false)}
+                />
               )}
             </div>
           </div>

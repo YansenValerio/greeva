@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { Price } from '@/components/shared/Price';
 import { Badge } from '@/components/shared/Badge';
 import { PageHeader } from '@/components/dashboard/PageHeader';
-import { adminGetProduct, adminUpdateProductStatus } from '@/lib/api/admin';
+import { adminGetProduct, adminUpdateProductStatus, adminToggleFeatured } from '@/lib/api/admin';
+import { toast } from '@/lib/feedback';
 import type { Product } from '@/types/product';
 
 const PRODUCT_STATUSES = [
@@ -33,6 +34,21 @@ export default function AdminProductDetailPage() {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [togglingFeatured, setTogglingFeatured] = useState(false);
+
+  async function handleToggleFeatured() {
+    if (!product) return;
+    setTogglingFeatured(true);
+    try {
+      const updated = await adminToggleFeatured(product.id);
+      setProduct(updated);
+      toast.success(updated.is_featured ? 'Ditambahkan ke Pilihan.' : 'Dilepas dari Pilihan.');
+    } catch {
+      toast.error('Gagal mengubah status pilihan.');
+    } finally {
+      setTogglingFeatured(false);
+    }
+  }
 
   useEffect(() => {
     adminGetProduct(Number(id))
@@ -121,7 +137,30 @@ export default function AdminProductDetailPage() {
         </div>
 
         {/* Status update */}
-        <div>
+        <div className="space-y-4">
+          {/* Featured toggle */}
+          <div className="rounded-card bg-white p-5 shadow-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-semibold text-greeva-black">Produk Pilihan</h2>
+                <p className="mt-0.5 text-xs text-gray-400">
+                  Ditampilkan di halaman utama
+                </p>
+              </div>
+              <button
+                onClick={handleToggleFeatured}
+                disabled={togglingFeatured}
+                className={`rounded-pill px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                  product.is_featured
+                    ? 'bg-greeva-forest text-white hover:bg-greeva-starbucks-green'
+                    : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {togglingFeatured ? '...' : product.is_featured ? '★ Pilihan' : 'Jadikan Pilihan'}
+              </button>
+            </div>
+          </div>
+
           <div className="rounded-card bg-greeva-sand-warm p-5">
             <h2 className="mb-4 font-semibold text-greeva-black">Ubah Status</h2>
 
@@ -160,3 +199,4 @@ export default function AdminProductDetailPage() {
     </div>
   );
 }
+

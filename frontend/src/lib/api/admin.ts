@@ -5,6 +5,8 @@ import type { Product } from '@/types/product';
 import type { Order } from '@/types/order';
 import type { Category } from '@/types/category';
 import type { AdminDashboard } from '@/types/admin';
+import type { ReturnRequest } from '@/types/return';
+import type { Voucher, AdminVoucherPayload } from '@/types/voucher';
 
 // Dashboard
 export async function adminGetDashboard(): Promise<AdminDashboard> {
@@ -281,4 +283,169 @@ export async function adminMarkPayoutPaid(
 export async function adminCancelPayout(id: number): Promise<PayoutBatch> {
   const { data } = await client.patch<ApiItem<PayoutBatch>>(`/admin/payouts/${id}/cancel`);
   return data.data;
+}
+
+// Users (buyers)
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  role_label: string;
+  phone: string | null;
+  avatar: string | null;
+  is_suspended: boolean;
+  email_verified_at: string | null;
+  created_at: string;
+}
+
+export interface AdminUserParams {
+  page?: number;
+  per_page?: number;
+  role?: string;
+  search?: string;
+  suspended?: boolean;
+}
+
+export async function adminGetUsers(params?: AdminUserParams): Promise<ApiCollection<AdminUser>> {
+  const { data } = await client.get<ApiCollection<AdminUser>>('/admin/users', { params });
+  return data;
+}
+
+export async function adminToggleSuspendUser(id: number): Promise<AdminUser> {
+  const { data } = await client.patch<{ data: AdminUser; message: string }>(`/admin/users/${id}/suspend`);
+  return data.data;
+}
+
+// Earnings (all)
+export interface AdminEarningParams {
+  page?: number;
+  per_page?: number;
+  status?: string;
+  partner_id?: number;
+}
+
+export async function adminGetAllEarnings(
+  params?: AdminEarningParams,
+): Promise<ApiCollection<PartnerEarning>> {
+  const { data } = await client.get<ApiCollection<PartnerEarning>>('/admin/earnings', { params });
+  return data;
+}
+
+export async function adminReverseEarning(
+  id: number,
+  reason: string,
+): Promise<PartnerEarning> {
+  const { data } = await client.patch<{ data: PartnerEarning; message: string }>(
+    `/admin/earnings/${id}/reverse`,
+    { reason },
+  );
+  return data.data;
+}
+
+// Featured products
+export async function adminToggleFeatured(id: number): Promise<Product> {
+  const { data } = await client.patch<ApiItem<Product>>(`/admin/products/${id}/toggle-featured`);
+  return data.data;
+}
+
+// Vouchers
+export interface AdminVoucherParams {
+  page?: number;
+  per_page?: number;
+  search?: string;
+  active?: boolean;
+}
+
+export async function adminGetVouchers(
+  params?: AdminVoucherParams,
+): Promise<ApiCollection<Voucher>> {
+  const { data } = await client.get<ApiCollection<Voucher>>('/admin/vouchers', { params });
+  return data;
+}
+
+export async function adminCreateVoucher(payload: AdminVoucherPayload): Promise<Voucher> {
+  const { data } = await client.post<ApiItem<Voucher>>('/admin/vouchers', payload);
+  return data.data;
+}
+
+export async function adminUpdateVoucher(
+  id: number,
+  payload: Partial<AdminVoucherPayload>,
+): Promise<Voucher> {
+  const { data } = await client.put<ApiItem<Voucher>>(`/admin/vouchers/${id}`, payload);
+  return data.data;
+}
+
+export async function adminDeleteVoucher(id: number): Promise<void> {
+  await client.delete(`/admin/vouchers/${id}`);
+}
+
+// Return requests (retur)
+export interface AdminReturnParams {
+  page?: number;
+  per_page?: number;
+  status?: string;
+}
+
+export async function adminGetReturns(
+  params?: AdminReturnParams,
+): Promise<ApiCollection<ReturnRequest>> {
+  const { data } = await client.get<ApiCollection<ReturnRequest>>('/admin/returns', { params });
+  return data;
+}
+
+export async function adminGetReturn(id: number): Promise<ReturnRequest> {
+  const { data } = await client.get<ApiItem<ReturnRequest>>(`/admin/returns/${id}`);
+  return data.data;
+}
+
+export async function adminApproveReturn(id: number, adminNote?: string): Promise<ReturnRequest> {
+  const { data } = await client.patch<{ data: ReturnRequest; message: string }>(
+    `/admin/returns/${id}/approve`,
+    { admin_note: adminNote },
+  );
+  return data.data;
+}
+
+export async function adminRejectReturn(id: number, adminNote: string): Promise<ReturnRequest> {
+  const { data } = await client.patch<{ data: ReturnRequest; message: string }>(
+    `/admin/returns/${id}/reject`,
+    { admin_note: adminNote },
+  );
+  return data.data;
+}
+
+// Reports (export CSV)
+export type ReportType = 'sales' | 'earnings' | 'payouts';
+
+export interface ReportParams {
+  from?: string; // YYYY-MM-DD
+  to?: string;   // YYYY-MM-DD
+  partner_id?: number;
+}
+
+/**
+ * Unduh laporan CSV. Memakai client (Bearer token otomatis) lalu trigger
+ * download di browser dari blob — karena <a href> tidak menyertakan auth header.
+ */
+export async function adminDownloadReport(type: ReportType, params?: ReportParams): Promise<void> {
+  const res = await client.get(`/admin/reports/${type}`, {
+    params,
+    responseType: 'blob',
+  });
+
+  // Ambil filename dari Content-Disposition jika ada
+  const disposition = res.headers['content-disposition'] as string | undefined;
+  const match = disposition?.match(/filename="?([^"]+)"?/);
+  const filename = match?.[1] ?? `greeva-${type}.csv`;
+
+  const url = window.URL.createObjectURL(new Blob([res.data as BlobPart]));
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
 }

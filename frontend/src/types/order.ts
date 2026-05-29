@@ -37,6 +37,7 @@ export interface Order {
   status: string;
   status_label: string;
   can_be_cancelled: boolean;
+  can_request_return?: boolean;
   subtotal: number;
   subtotal_formatted: string;
   shipping_total: number;
@@ -85,4 +86,5 @@ export interface CheckoutPayload {
   shipping_courier: string;
   shipping_service: string;
   notes?: string;
+  voucher_code?: string;
 }

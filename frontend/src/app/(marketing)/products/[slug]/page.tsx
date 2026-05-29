@@ -18,11 +18,26 @@ interface ProductPageProps {
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://greeva.id';
   try {
     const product = await getProductBySlug(params.slug);
+    const image = product.images?.[0] ?? null;
     return {
       title: product.meta_title ?? product.name,
       description: product.meta_description ?? product.short_description ?? undefined,
+      openGraph: {
+        title: product.meta_title ?? product.name,
+        description: product.meta_description ?? product.short_description ?? undefined,
+        url: `${baseUrl}/products/${product.slug}`,
+        images: image ? [{ url: image }] : [],
+        type: 'website',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: product.meta_title ?? product.name,
+        description: product.meta_description ?? product.short_description ?? undefined,
+        images: image ? [image] : [],
+      },
     };
   } catch {
     return { title: 'Produk Tidak Ditemukan' };
@@ -48,8 +63,41 @@ export default async function ProductPage({ params }: ProductPageProps) {
     ...(product.variants?.flatMap((v) => v.images) ?? []),
   ];
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://greeva.id';
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.short_description ?? product.description ?? undefined,
+    image: product.images,
+    url: `${baseUrl}/products/${product.slug}`,
+    brand: { '@type': 'Brand', name: product.partner?.name ?? 'Greeva' },
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'IDR',
+      price: (product.price / 100).toFixed(0),
+      availability: product.total_stock > 0
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      seller: { '@type': 'Organization', name: 'Greeva' },
+    },
+    ...(product.reviews_count > 0 && product.average_rating
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: product.average_rating.toFixed(1),
+            reviewCount: product.reviews_count,
+          },
+        }
+      : {}),
+  };
+
   return (
     <main className="py-10 md:py-14">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Container>
         {/* Breadcrumb */}
         <nav className="mb-8 flex items-center gap-2 text-sm text-gray-500" aria-label="Breadcrumb">

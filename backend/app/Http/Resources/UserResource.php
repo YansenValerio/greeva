@@ -12,15 +12,16 @@ class UserResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'         => $this->id,
-            'name'       => $this->name,
-            'email'      => $this->email,
-            'role'       => $this->role->value,
-            'role_label' => $this->role->label(),
-            'phone'      => $this->phone,
-            'avatar'     => $this->avatar,
+            'id'           => $this->id,
+            'name'         => $this->name,
+            'email'        => $this->email,
+            'role'         => $this->role->value,
+            'role_label'   => $this->role->label(),
+            'phone'        => $this->phone,
+            'avatar'       => $this->avatar,
+            'is_suspended' => $this->is_suspended,
             'email_verified_at' => $this->email_verified_at?->toISOString(),
-            'created_at' => $this->created_at->toISOString(),
+            'created_at'   => $this->created_at->toISOString(),
 
             // Hanya disertakan jika relasi dimuat (via ->load('partner'))
             'partner' => $this->when(

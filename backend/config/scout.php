@@ -141,7 +141,7 @@ return [
         'key'  => env('MEILISEARCH_KEY'),
         'index-settings' => [
             \App\Models\Product::class => [
-                'filterableAttributes' => ['status', 'category_id', 'partner_id', 'price'],
+                'filterableAttributes' => ['status', 'category_id', 'partner_id', 'price', 'is_featured'],
                 'sortableAttributes'   => ['published_at', 'price', 'name'],
             ],
         ],

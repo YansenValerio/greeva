@@ -217,6 +217,12 @@ export default function AccountPage() {
                   Pesanan Saya →
                 </Link>
                 <Link
+                  href="/account/notifications"
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-greeva-forest-dark hover:bg-white/60 transition-colors"
+                >
+                  Notifikasi →
+                </Link>
+                <Link
                   href="/account/addresses"
                   className="rounded-lg px-3 py-2 text-sm font-medium text-greeva-forest-dark hover:bg-white/60 transition-colors"
                 >

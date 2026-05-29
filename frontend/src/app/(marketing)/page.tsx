@@ -11,11 +11,16 @@ import { DualCTA } from '@/components/home/DualCTA';
 
 async function getData() {
   try {
-    const [productsRes, categories] = await Promise.all([
-      getProducts({ per_page: 8 }),
+    const [featuredRes, latestRes, categories] = await Promise.all([
+      getProducts({ per_page: 4, featured: true }),
+      getProducts({ per_page: 4 }),
       getCategories(),
     ]);
-    return { products: productsRes.data, categories };
+    // Gunakan featured jika ada, fallback ke latest
+    const products = featuredRes.data.length >= 4
+      ? featuredRes.data
+      : latestRes.data;
+    return { products, categories };
   } catch {
     return { products: [], categories: [] };
   }

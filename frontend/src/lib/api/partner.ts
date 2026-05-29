@@ -177,3 +177,44 @@ export async function updatePartnerVariant(
 export async function deletePartnerVariant(productId: number, variantId: number): Promise<void> {
   await client.delete(`/partner/products/${productId}/variants/${variantId}`);
 }
+
+// Partner Orders (penjualan)
+export interface PartnerOrderItem {
+  id: number;
+  product_name: string;
+  variant_name: string;
+  sku: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
+export interface PartnerOrder {
+  id: number;
+  order_number: string;
+  status: string;
+  status_label: string;
+  grand_total: number;
+  grand_total_formatted: string;
+  paid_at: string | null;
+  created_at: string;
+  items: PartnerOrderItem[];
+}
+
+export interface PartnerOrderParams {
+  page?: number;
+  per_page?: number;
+  status?: string;
+}
+
+export async function getPartnerOrders(
+  params?: PartnerOrderParams,
+): Promise<ApiCollection<PartnerOrder>> {
+  const { data } = await client.get<ApiCollection<PartnerOrder>>('/partner/orders', { params });
+  return data;
+}
+
+export async function getPartnerOrder(orderNumber: string): Promise<PartnerOrder> {
+  const { data } = await client.get<{ data: PartnerOrder }>(`/partner/orders/${orderNumber}`);
+  return data.data;
+}

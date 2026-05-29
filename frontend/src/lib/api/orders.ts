@@ -1,10 +1,16 @@
 import { client } from './client';
 import type { Order, CheckoutPayload, CheckoutResult } from '@/types/order';
 import type { ApiCollection, ApiItem } from '@/types/api';
+import type { VoucherPreviewResult } from '@/types/voucher';
 
 export async function checkout(payload: CheckoutPayload): Promise<CheckoutResult> {
   const { data } = await client.post<CheckoutResult>('/checkout', payload);
   return data;
+}
+
+export async function previewVoucher(code: string): Promise<VoucherPreviewResult> {
+  const { data } = await client.post<ApiItem<VoucherPreviewResult>>('/vouchers/preview', { code });
+  return data.data;
 }
 
 export async function getOrders(params?: {

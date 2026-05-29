@@ -12,6 +12,7 @@ import { useWishlistStore } from '@/stores/wishlist.store';
 import { useHydrated } from '@/hooks/useHydrated';
 import { logout as logoutApi } from '@/lib/api/auth';
 import { getGuestCartToken } from '@/lib/guestCart';
+import { NotificationBell } from '@/components/layout/NotificationBell';
 
 export function Navbar() {
   const router = useRouter();
@@ -159,7 +160,7 @@ export function Navbar() {
               Cerita
             </Link>
             <Link
-              href="/about"
+              href="/tentang"
               className="text-sm font-medium text-white/80 hover:text-white transition-colors"
             >
               Tentang
@@ -176,6 +177,9 @@ export function Navbar() {
             >
               <Search className="h-5 w-5" />
             </button>
+
+            {/* Notifikasi */}
+            <NotificationBell />
 
             {/* Cart */}
             <button
@@ -275,7 +279,7 @@ export function Navbar() {
               { href: '/shop', label: 'Toko' },
               { href: '/mitra', label: 'Mitra' },
               { href: '/cerita', label: 'Cerita' },
-              { href: '/about', label: 'Tentang' },
+              { href: '/tentang', label: 'Tentang' },
             ].map((link) => (
               <Link
                 key={link.href}

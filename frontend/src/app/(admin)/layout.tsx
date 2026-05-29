@@ -7,9 +7,14 @@ const ADMIN_NAV = [
   { label: 'Dashboard', href: '/admin/dashboard' },
   { label: 'Produk', href: '/admin/products' },
   { label: 'Kategori', href: '/admin/categories' },
+  { label: 'Voucher', href: '/admin/vouchers' },
   { label: 'Pesanan', href: '/admin/orders' },
+  { label: 'Retur', href: '/admin/returns' },
   { label: 'Mitra', href: '/admin/partners' },
+  { label: 'Earning', href: '/admin/earnings' },
   { label: 'Payout', href: '/admin/payouts' },
+  { label: 'Pengguna', href: '/admin/users' },
+  { label: 'Laporan', href: '/admin/reports' },
   { label: 'Audit Log', href: '/admin/audit-logs' },
 ];
 

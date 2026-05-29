@@ -13,6 +13,7 @@ use App\Services\Cart\CartService;
 use App\Services\Inventory\InventoryService;
 use App\Services\Payment\MidtransService;
 use App\Services\Shipping\ShippingService;
+use App\Services\Voucher\VoucherService;
 use App\Support\AuditLogger;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +26,7 @@ class CheckoutService
         private readonly MidtransService $midtransService,
         private readonly InventoryService $inventoryService,
         private readonly ShippingService $shippingService,
+        private readonly VoucherService $voucherService,
     ) {}
 
     /**
@@ -137,7 +139,18 @@ class CheckoutService
                 $subtotal += $item['price'] * $item['quantity'];
             }
 
-            $grandTotal = $subtotal + $shippingTotal;
+            // Terapkan voucher (validasi otoritatif di dalam transaksi + kunci baris untuk cegah race kuota)
+            $discountTotal = 0;
+            $voucherId     = null;
+            $voucherCode   = null;
+            if (! empty($checkoutData['voucher_code'])) {
+                $voucher       = $this->voucherService->validate($checkoutData['voucher_code'], $subtotal, $user, lock: true);
+                $discountTotal = $this->voucherService->computeDiscount($voucher, $subtotal);
+                $voucherId     = $voucher->id;
+                $voucherCode   = $voucher->code;
+            }
+
+            $grandTotal = $subtotal + $shippingTotal - $discountTotal;
 
             // Generate nomor order: GRV-YYYYMMDD-NNNN
             $count       = Order::whereDate('created_at', today())->count() + 1;
@@ -157,7 +170,9 @@ class CheckoutService
                 'shipping_total'       => $shippingTotal,
                 'shipping_courier'     => $rate->courierName,
                 'shipping_service'     => $rate->serviceName,
-                'discount_total'       => 0,
+                'discount_total'       => $discountTotal,
+                'voucher_id'           => $voucherId,
+                'voucher_code'         => $voucherCode,
                 'grand_total'          => $grandTotal,
                 'shipping_name'        => $checkoutData['shipping_name'],
                 'shipping_phone'       => $checkoutData['shipping_phone'],

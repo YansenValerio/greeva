@@ -21,6 +21,8 @@ class OrderResource extends JsonResource
             'status'          => $this->status->value,
             'status_label'    => $this->status->label(),
             'can_be_cancelled' => $this->canBeCancelled(),
+            'can_request_return' => $this->canRequestReturn()
+                && ! $this->returnRequests()->where('status', 'pending')->exists(),
 
             'subtotal'                => $this->subtotal,
             'subtotal_formatted'      => Money::format($this->subtotal),
@@ -29,6 +31,8 @@ class OrderResource extends JsonResource
             'shipping_courier'        => $this->shipping_courier,
             'shipping_service'        => $this->shipping_service,
             'discount_total'          => $this->discount_total,
+            'discount_total_formatted' => Money::format($this->discount_total),
+            'voucher_code'            => $this->voucher_code,
             'grand_total'             => $this->grand_total,
             'grand_total_formatted'   => Money::format($this->grand_total),
 
@@ -48,6 +52,8 @@ class OrderResource extends JsonResource
             'paid_at'            => $this->paid_at?->toDateTimeString(),
             'delivered_at'       => $this->delivered_at?->toDateTimeString(),
             'completed_at'       => $this->completed_at?->toDateTimeString(),
+            'cancelled_at'       => $this->cancelled_at?->toDateTimeString(),
+            'refunded_at'        => $this->refunded_at?->toDateTimeString(),
 
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),

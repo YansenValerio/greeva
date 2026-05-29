@@ -28,7 +28,7 @@ class ProductController extends Controller
         $products = $this->productService->listPublic($request->only([
             'category_id', 'partner_id', 'search',
             'min_price', 'max_price',
-            'sort_by', 'sort_order', 'per_page',
+            'sort_by', 'sort_order', 'per_page', 'featured',
         ]));
 
         return response()->json(ProductResource::collection($products)->response()->getData(true));

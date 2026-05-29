@@ -34,6 +34,7 @@ class Product extends Model
         'meta_description',
         'revenue_share_percent',
         'published_at',
+        'is_featured',
     ];
 
     protected function casts(): array
@@ -46,6 +47,7 @@ class Product extends Model
             'weight'                 => 'integer',
             'revenue_share_percent'  => 'integer',
             'published_at'           => 'datetime',
+            'is_featured'            => 'boolean',
         ];
     }
 
@@ -76,6 +78,7 @@ class Product extends Model
             'status'               => $this->status->value,
             'price'                => $this->price,
             'published_at'         => $this->published_at?->timestamp,
+            'is_featured'          => $this->is_featured,
         ];
     }
 
@@ -118,6 +121,11 @@ class Product extends Model
     public function scopeActive($query)
     {
         return $query->where('status', ProductStatus::Active);
+    }
+
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_featured', true);
     }
 
     public function scopeForPartner($query, int $partnerId)

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\Buyer;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CategoryController;
@@ -106,6 +107,29 @@ Route::prefix('v1')->group(function () {
             // Audit log viewer (read-only) — riwayat perubahan entitas sensitif
             Route::get('audit-logs', [Admin\AuditLogController::class, 'index']);
 
+            // User/buyer management
+            Route::get('users', [Admin\UserController::class, 'index']);
+            Route::get('users/{user}', [Admin\UserController::class, 'show']);
+            Route::patch('users/{user}/suspend', [Admin\UserController::class, 'toggleSuspend']);
+
+            // Return requests (retur)
+            Route::get('returns', [Admin\ReturnRequestController::class, 'index']);
+            Route::get('returns/{returnRequest}', [Admin\ReturnRequestController::class, 'show']);
+            Route::patch('returns/{returnRequest}/approve', [Admin\ReturnRequestController::class, 'approve']);
+            Route::patch('returns/{returnRequest}/reject', [Admin\ReturnRequestController::class, 'reject']);
+
+            // Laporan (export CSV)
+            Route::get('reports/sales', [Admin\ReportController::class, 'sales']);
+            Route::get('reports/earnings', [Admin\ReportController::class, 'earnings']);
+            Route::get('reports/payouts', [Admin\ReportController::class, 'payouts']);
+
+            // Voucher management
+            Route::get('vouchers', [Admin\VoucherController::class, 'index']);
+            Route::post('vouchers', [Admin\VoucherController::class, 'store']);
+            Route::get('vouchers/{voucher}', [Admin\VoucherController::class, 'show']);
+            Route::put('vouchers/{voucher}', [Admin\VoucherController::class, 'update']);
+            Route::delete('vouchers/{voucher}', [Admin\VoucherController::class, 'destroy']);
+
             // Category management
             Route::get('categories', [Admin\CategoryController::class, 'index']);
             Route::post('categories', [Admin\CategoryController::class, 'store']);
@@ -125,6 +149,7 @@ Route::prefix('v1')->group(function () {
             Route::get('products/{product}', [Admin\ProductController::class, 'show']);
             Route::put('products/{product}', [Admin\ProductController::class, 'update']);
             Route::patch('products/{product}/status', [Admin\ProductController::class, 'updateStatus']);
+            Route::patch('products/{product}/toggle-featured', [Admin\ProductController::class, 'toggleFeatured']);
 
             // Variant management (admin)
             Route::post('products/{product}/variants', [Admin\VariantController::class, 'store']);
@@ -137,7 +162,9 @@ Route::prefix('v1')->group(function () {
             Route::get('orders/{order}', [Admin\OrderController::class, 'show']);
             Route::patch('orders/{order}/status', [Admin\OrderController::class, 'updateStatus']);
 
-            // Earnings (admin view per-partner)
+            // Earnings (admin view)
+            Route::get('earnings', [Admin\EarningController::class, 'allEarnings']);
+            Route::patch('earnings/{earning}/reverse', [Admin\EarningController::class, 'reverse']);
             Route::get('partners/{partner}/earnings', [Admin\EarningController::class, 'index']);
 
             // Payout batches
@@ -179,17 +206,32 @@ Route::prefix('v1')->group(function () {
             Route::get('analytics', [Partner\AnalyticsController::class, 'index']);
             Route::get('inventory-logs', [Partner\InventoryController::class, 'index']);
 
+            // Order visibility (produk mitra — tanpa PII buyer)
+            Route::get('orders', [Partner\OrderController::class, 'index']);
+            Route::get('orders/{orderNumber}', [Partner\OrderController::class, 'show']);
+
             // AI Copywriter (rate-limited)
             Route::middleware('throttle:20,1')->post('ai/generate-copy', [Partner\AiController::class, 'generateCopy']);
         });
 
         // ── Buyer ───────────────────────────────────────────────────────────
 
+        // Notifikasi in-app
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::get('unread-count', [NotificationController::class, 'unreadCount']);
+            Route::patch('read-all', [NotificationController::class, 'markAllRead']);
+            Route::patch('{notification}/read', [NotificationController::class, 'markRead']);
+        });
+
         // Cart merge — require auth (gabung guest cart ke akun)
         Route::post('cart/merge', [CartController::class, 'merge']);
 
         // Ongkir — hitung opsi pengiriman dari isi cart (buyer)
         Route::middleware('role:buyer')->post('shipping/rates', [Buyer\ShippingController::class, 'rates']);
+
+        // Voucher preview (buyer) — validasi kode terhadap cart
+        Route::middleware('role:buyer')->post('vouchers/preview', [Buyer\VoucherController::class, 'preview']);
 
         // Checkout
         Route::middleware('role:buyer')->post('checkout', [Buyer\CheckoutController::class, 'store']);
@@ -199,6 +241,12 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [Buyer\OrderController::class, 'index']);
             Route::get('{orderNumber}', [Buyer\OrderController::class, 'show']);
             Route::post('{orderNumber}/cancel', [Buyer\OrderController::class, 'cancel']);
+        });
+
+        // Pengajuan retur (buyer)
+        Route::middleware('role:buyer')->group(function () {
+            Route::get('returns', [Buyer\ReturnRequestController::class, 'index']);
+            Route::post('orders/{orderNumber}/return', [Buyer\ReturnRequestController::class, 'store']);
         });
 
         // Saved addresses (buyer)

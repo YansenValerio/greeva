@@ -9,6 +9,7 @@ use App\Models\Partner;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Models\Voucher;
 use App\Services\Cart\CartService;
 use App\Services\Checkout\CheckoutService;
 use App\Services\Checkout\StockReservationService;
@@ -181,6 +182,63 @@ it('restores stock and marks order failed if Midtrans throws', function () {
     // Order ditandai payment_failed
     $order = Order::latest()->first();
     expect($order->status)->toBe(OrderStatus::PaymentFailed);
+});
+
+// ── voucher ───────────────────────────────────────────────────────────────────
+
+it('applies percent voucher and snapshots it on the order', function () {
+    $partner  = Partner::factory()->create();
+    $category = Category::factory()->create();
+    $product  = Product::factory()->for($partner)->for($category)->create(['price' => 2500000]);
+    $variant  = ProductVariant::factory()->for($product)->create(['price' => null, 'stock' => 10]);
+    $user     = User::factory()->state(['role' => 'buyer'])->create();
+
+    $voucher = Voucher::factory()->percent(10)->create(['code' => 'HEMAT10']);
+
+    $cartItems = makeCartItems($variant, $product, qty: 2); // subtotal 5.000.000
+
+    $this->cartMock->shouldReceive('getAuthKey')->andReturn("cart:{$user->id}");
+    $this->cartMock->shouldReceive('get')->andReturn($cartItems);
+    $this->cartMock->shouldReceive('clear');
+    $this->midtransMock->shouldReceive('createSnap')->andReturn([
+        'token' => 'tok', 'redirect_url' => 'url',
+    ]);
+
+    $data = makeCheckoutData();
+    $data['voucher_code'] = 'hemat10';
+
+    $order = $this->service->checkout($data, $user)['order'];
+
+    expect($order->subtotal)->toBe(5000000)
+        ->and($order->discount_total)->toBe(500000)         // 10% × 5.000.000
+        ->and($order->voucher_id)->toBe($voucher->id)
+        ->and($order->voucher_code)->toBe('HEMAT10')
+        ->and($order->grand_total)->toBe(5000000 + 1000000 - 500000); // subtotal + ongkir - diskon
+});
+
+it('rejects checkout with an invalid voucher', function () {
+    $partner  = Partner::factory()->create();
+    $category = Category::factory()->create();
+    $product  = Product::factory()->for($partner)->for($category)->create(['price' => 2500000]);
+    $variant  = ProductVariant::factory()->for($product)->create(['price' => null, 'stock' => 10]);
+    $user     = User::factory()->state(['role' => 'buyer'])->create();
+
+    Voucher::factory()->create(['code' => 'MIN100', 'min_purchase' => 99_000_000]);
+
+    $cartItems = makeCartItems($variant, $product, qty: 2);
+
+    $this->cartMock->shouldReceive('getAuthKey')->andReturn("cart:{$user->id}");
+    $this->cartMock->shouldReceive('get')->andReturn($cartItems);
+    $this->cartMock->shouldNotReceive('clear');
+
+    $data = makeCheckoutData();
+    $data['voucher_code'] = 'MIN100';
+
+    expect(fn () => $this->service->checkout($data, $user))
+        ->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+
+    // Stok dikembalikan karena transaksi di-rollback
+    expect(ProductVariant::find($variant->id)->stock)->toBe(10);
 });
 
 it('generates unique order number per day', function () {

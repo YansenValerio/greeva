@@ -28,6 +28,7 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmailC
         'role',
         'phone',
         'avatar',
+        'is_suspended',
     ];
 
     protected $hidden = [
@@ -41,6 +42,7 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmailC
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
             'role'              => UserRole::class,
+            'is_suspended'      => 'boolean',
         ];
     }
 

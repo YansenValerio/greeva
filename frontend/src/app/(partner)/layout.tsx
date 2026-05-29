@@ -7,6 +7,7 @@ const PARTNER_NAV = [
   { label: 'Dashboard', href: '/partner/dashboard' },
   { label: 'Analitik', href: '/partner/analytics' },
   { label: 'Produk Saya', href: '/partner/products' },
+  { label: 'Penjualan', href: '/partner/sales' },
   { label: 'Riwayat Stok', href: '/partner/inventory' },
   { label: 'Pendapatan', href: '/partner/earnings' },
   { label: 'Riwayat Payout', href: '/partner/payouts' },

@@ -52,6 +52,9 @@ class ProductService
             if (! empty($filters['max_price'])) {
                 $meiliFilters[] = 'price <= ' . (int) $filters['max_price'];
             }
+            if (! empty($filters['featured'])) {
+                $meiliFilters[] = 'is_featured = true';
+            }
 
             $options['filter'] = implode(' AND ', $meiliFilters);
             $options['sort']   = $this->buildMeiliSort($filters);
@@ -83,6 +86,10 @@ class ProductService
         }
         if (! empty($filters['max_price'])) {
             $query->where('price', '<=', $filters['max_price']);
+        }
+
+        if (! empty($filters['featured'])) {
+            $query->featured();
         }
 
         $sortBy    = $filters['sort_by'] ?? 'published_at';

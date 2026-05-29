@@ -37,6 +37,7 @@ class ProductResource extends JsonResource
             'average_rating'       => $this->average_rating !== null
                 ? round((float) $this->average_rating, 2)
                 : null,
+            'is_featured'          => (bool) $this->is_featured,
             'created_at'           => $this->created_at?->toDateTimeString(),
             'updated_at'           => $this->updated_at?->toDateTimeString(),
 

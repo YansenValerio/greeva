@@ -81,6 +81,22 @@ class ProductController extends Controller
     }
 
     /**
+     * PATCH /api/v1/admin/products/{product}/toggle-featured
+     * Tandai/lepas produk sebagai "pilihan".
+     */
+    public function toggleFeatured(Product $product): JsonResponse
+    {
+        $product->update(['is_featured' => ! $product->is_featured]);
+
+        $label = $product->is_featured ? 'ditambahkan ke' : 'dilepas dari';
+
+        return response()->json([
+            'data'    => ProductResource::make($product->fresh(['partner', 'category', 'variants'])),
+            'message' => "Produk berhasil {$label} Pilihan.",
+        ]);
+    }
+
+    /**
      * PATCH /api/v1/admin/products/bulk-status
      * Ubah status banyak produk sekaligus (kurasi massal).
      */

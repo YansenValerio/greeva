@@ -10,12 +10,13 @@ import { FormField } from '@/components/shared/FormField';
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { Price } from '@/components/shared/Price';
-import { checkout } from '@/lib/api/orders';
+import { checkout, previewVoucher } from '@/lib/api/orders';
 import { getAddresses } from '@/lib/api/addresses';
 import { getShippingRates, type ShippingRate } from '@/lib/api/shipping';
 import { useCartStore } from '@/stores/cart.store';
 import { checkoutSchema, type CheckoutFormData as FormData } from '@/lib/schemas/checkout';
 import type { Address } from '@/types/address';
+import type { VoucherPreviewResult } from '@/types/voucher';
 
 export function CheckoutForm() {
   const router = useRouter();
@@ -29,6 +30,38 @@ export function CheckoutForm() {
   const [ratesLoading, setRatesLoading] = useState(false);
   const [ratesError, setRatesError] = useState('');
   const [selectedRateKey, setSelectedRateKey] = useState<string | null>(null);
+
+  const [voucherInput, setVoucherInput] = useState('');
+  const [appliedVoucher, setAppliedVoucher] = useState<VoucherPreviewResult | null>(null);
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [voucherError, setVoucherError] = useState('');
+
+  async function handleApplyVoucher() {
+    const code = voucherInput.trim();
+    if (!code) return;
+    setVoucherLoading(true);
+    setVoucherError('');
+    try {
+      const result = await previewVoucher(code);
+      setAppliedVoucher(result);
+    } catch (e) {
+      const msg = axios.isAxiosError(e)
+        ? (e.response?.data?.message as string | undefined) ?? 'Kode voucher tidak valid.'
+        : 'Kode voucher tidak valid.';
+      setVoucherError(msg);
+      setAppliedVoucher(null);
+    } finally {
+      setVoucherLoading(false);
+    }
+  }
+
+  function handleRemoveVoucher() {
+    setAppliedVoucher(null);
+    setVoucherInput('');
+    setVoucherError('');
+  }
+
+  const discount = appliedVoucher?.discount_amount ?? 0;
 
   const {
     register,
@@ -138,6 +171,7 @@ export function CheckoutForm() {
         ...values,
         shipping_district: values.shipping_district || undefined,
         notes: values.notes || undefined,
+        voucher_code: appliedVoucher?.voucher_code,
       });
 
       const { snap_token, data: order } = result;
@@ -356,6 +390,48 @@ export function CheckoutForm() {
         )}
       </div>
 
+      {/* Kode voucher */}
+      <div className="rounded-card border border-greeva-mint-light p-5">
+        <p className="mb-2 text-sm font-medium text-greeva-black">Punya kode voucher?</p>
+        {appliedVoucher ? (
+          <div className="flex items-center justify-between rounded-lg bg-greeva-mint-light/50 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-greeva-forest-dark">
+                {appliedVoucher.voucher_code}
+              </p>
+              <p className="text-xs text-greeva-forest-dark/70">
+                Potongan {appliedVoucher.discount_formatted} diterapkan
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRemoveVoucher}
+              className="text-xs font-medium text-red-600 hover:underline"
+            >
+              Hapus
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              value={voucherInput}
+              onChange={(e) => setVoucherInput(e.target.value.toUpperCase())}
+              placeholder="Masukkan kode"
+              className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm uppercase focus:border-greeva-forest focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleApplyVoucher}
+              disabled={voucherLoading || !voucherInput.trim()}
+              className="rounded-pill bg-greeva-forest px-5 py-2 text-sm font-semibold text-white hover:bg-greeva-starbucks-green disabled:opacity-50"
+            >
+              {voucherLoading ? '...' : 'Terapkan'}
+            </button>
+          </div>
+        )}
+        {voucherError && <p className="mt-2 text-xs text-red-600">{voucherError}</p>}
+      </div>
+
       {/* Ringkasan biaya */}
       <div className="rounded-card bg-greeva-sand-warm p-5">
         <dl className="space-y-2 text-sm">
@@ -371,12 +447,18 @@ export function CheckoutForm() {
               {selectedRate ? <Price cents={selectedRate.cost} /> : <span className="text-gray-400">Pilih kurir</span>}
             </dd>
           </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-greeva-forest">
+              <dt>Diskon ({appliedVoucher?.voucher_code})</dt>
+              <dd className="font-medium">− <Price cents={discount} className="inline" /></dd>
+            </div>
+          )}
         </dl>
         <div className="my-3 border-t border-gray-200" />
         <div className="flex justify-between text-base font-bold">
           <span className="text-greeva-black">Total</span>
           <Price
-            cents={subtotal + (selectedRate?.cost ?? 0)}
+            cents={Math.max(0, subtotal + (selectedRate?.cost ?? 0) - discount)}
             className="text-greeva-forest-dark"
           />
         </div>

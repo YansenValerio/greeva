@@ -23,6 +23,10 @@ class EnsureRole
             return response()->json(['message' => 'Tidak terautentikasi.'], 401);
         }
 
+        if ($request->user()->is_suspended) {
+            return response()->json(['message' => 'Akun Anda telah disuspend. Hubungi admin Greeva.'], 403);
+        }
+
         $userRole = $request->user()->role->value;
 
         if (! in_array($userRole, $roles, strict: true)) {
