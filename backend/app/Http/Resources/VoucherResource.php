@@ -24,7 +24,7 @@ class VoucherResource extends JsonResource
             'max_discount'     => $this->max_discount,
             'max_discount_formatted' => $this->max_discount !== null ? Money::format($this->max_discount) : null,
             'min_purchase'     => $this->min_purchase,
-            'min_purchase_formatted' => Money::format($this->min_purchase),
+            'min_purchase_formatted' => Money::format($this->min_purchase ?? 0),
             'valid_from'       => $this->valid_from?->toDateTimeString(),
             'valid_until'      => $this->valid_until?->toDateTimeString(),
             'usage_limit'      => $this->usage_limit,
