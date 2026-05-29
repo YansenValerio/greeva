@@ -76,7 +76,8 @@ pnpm dev                   # http://localhost:3000
 
 | File | Isi |
 |------|-----|
-| [docs/SETUP.md](docs/SETUP.md) | Setup lengkap, troubleshooting, IDE |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | **Checklist deploy produksi** — env, migrasi, cron, smoke test |
+| [docs/SETUP.md](docs/SETUP.md) | Setup development lengkap, troubleshooting, IDE |
 | [docs/01-prd.md](docs/01-prd.md) | Product Requirements Document |
 | [docs/02-database-schema.md](docs/02-database-schema.md) | Skema database lengkap |
 | [docs/03-folder-structure.md](docs/03-folder-structure.md) | Struktur folder FE & BE |
@@ -228,6 +229,7 @@ pnpm dev                   # http://localhost:3000
 - [x] Tes: `AdminDashboardServiceTest` (6) + `BulkStatusUpdateTest` (3). Total backend: 77 tes hijau
 
 ### Step 19 — UX Polish: Empty States, Skeleton, Mobile, Image Lightbox ✅
+
 - [x] **`<EmptyState />`** — komponen reusable (icon Lucide opsional, title, description, primary + secondary action sebagai href/onClick, 3 size). Refactor 15 call site (cart, orders, wishlist, addresses, partner & admin lists, ReviewList) jadi konsisten dengan icon + CTA yang jelas
 - [x] **`<Skeleton />` set** — primitif `Skeleton` (rect/pill/circle/text) + `ProductCardSkeleton`, `ProductGridSkeleton`, `OrderRowSkeleton`, `TableSkeleton`, `ListSkeleton`, `PageHeaderSkeleton`, `KpiCardSkeleton`. Menggantikan 12 inline `animate-pulse div` di berbagai halaman
 - [x] **Mobile navbar hamburger** — tombol Menu di viewport `<md`, drawer slide-in dari kanan (link nav, akun/login/logout), Escape & backdrop tap untuk tutup, body scroll dikunci saat terbuka
@@ -235,18 +237,120 @@ pnpm dev                   # http://localhost:3000
 - [x] **Admin tables responsive** — list row `/admin/products` & `/admin/orders` pakai `flex-wrap` + basis trick supaya info naik baris atas dan aksi/badge tetap kanan saat mobile
 - [x] **Product image lightbox** — `ProductImageLightbox` modal full-screen dengan keyboard nav (Esc/←/→), swipe via Pointer Events, dot indicator mobile, counter `n / total`. Main gallery jadi `<button>` click-to-zoom dengan hover badge "Perbesar". Zero dependency baru
 
+### Step 20 — Fitur Platform Lanjutan (Sesi Mei 2026) ✅
+
+#### Refund Flow
+- [x] Transisi `delivered`/`completed` → `refunded` ditambahkan ke state machine `OrderService`
+- [x] Saat order direfund: stok dikembalikan, earning mitra di-reverse otomatis, notifikasi dikirim ke buyer
+- [x] Kolom `refunded_at` di tabel `orders`; `OrderResource` menyertakan `refunded_at`
+- [x] Admin order detail: pilihan "Refunded" tersedia di dropdown status update
+
+#### Return Request (Pengajuan Retur)
+- [x] Tabel `return_requests` (return_number `RTN-…`, reason, description, photos, status, admin_note)
+- [x] `ReturnRequestService`: buat retur (validasi delivered/completed, cegah duplikat pending), approve (refund order + reverse earning + notifikasi), reject (alasan wajib + notifikasi)
+- [x] Buyer: tombol "Ajukan Retur" di halaman detail pesanan (muncul saat `can_request_return`), form inline (pilih alasan + deskripsi)
+- [x] Admin: `/admin/returns` — list dengan filter status + approve/reject inline; `/admin/returns/[id]` — detail lengkap dengan foto bukti
+- [x] Tests: `ReturnRequestServiceTest` (6) + `ReturnAndReportTest` (5 — feature test endpoint)
+
+#### Notifikasi In-App
+- [x] Tabel `app_notifications` (user_id, type, title, body, data JSON, read_at); query pemakaian otomatis melepas kuota
+- [x] `NotificationController`: list (paginated + unread_count), mark-read satu, mark-all-read, unread-count
+- [x] Trigger otomatis: perubahan status order (packing/shipped/delivered/completed/cancelled/refunded), approve/reject retur
+- [x] `NotificationBell` di Navbar: badge merah unread, dropdown 20 notifikasi terbaru, polling tiap 60s, tombol "Tandai semua dibaca"
+- [x] Halaman `/account/notifications` — daftar penuh, paginated, mark-read per item & semua
+- [x] Sidebar akun: pintasan "Notifikasi →"
+
+#### Manajemen Pengguna (Admin)
+- [x] `Admin\UserController` + endpoint `GET /admin/users`, `PATCH /admin/users/{user}/suspend`
+- [x] Kolom `is_suspended` di tabel `users`; middleware `EnsureRole` memblokir akun tersuspend (403)
+- [x] Admin tidak bisa di-suspend; toggle suspend/aktifkan via API dan UI
+- [x] Halaman `/admin/users` — filter role, search nama/email, tombol Suspend/Aktifkan
+- [x] Tests: suspend toggle, guard admin, blokir akses user tersuspend
+
+#### Visibilitas Order Mitra (Penjualan)
+- [x] `Partner\OrderController` — daftar order yang mengandung produk mitra, tanpa PII buyer (privacy by design)
+- [x] `PartnerOrderResource` — hanya ekspos `order_number`, status, total, items mitra (bukan alamat/nama pembeli)
+- [x] Halaman `/partner/sales` — filter status, breakdown item per order
+- [x] Nav mitra: "Penjualan" ditambahkan
+
+#### Manajemen Earning Admin
+- [x] Endpoint `GET /admin/earnings` — semua earning lintas mitra + filter status/partner
+- [x] Endpoint `PATCH /admin/earnings/{earning}/reverse` — batalkan earning pending/available dengan alasan (audit log)
+- [x] Perbaikan bug: `EarningController@reverse` sebelumnya memanggil `$request->validated()` pada base `Request` (bukan FormRequest) → crash 500 di produksi; diperbaiki via test
+- [x] Halaman `/admin/earnings` — list + filter status + tombol "Batalkan" per earning
+- [x] Nav admin: "Earning" ditambahkan
+
+#### Produk Pilihan (Featured)
+- [x] Kolom `is_featured` (boolean) di tabel `products` + index
+- [x] Endpoint `PATCH /admin/products/{product}/toggle-featured`
+- [x] Admin product detail: tombol "Jadikan Pilihan" / "★ Pilihan"
+- [x] Home page: prioritas fetch produk `is_featured`, fallback ke latest jika < 4
+- [x] Meilisearch: `is_featured` ditambahkan ke `filterableAttributes` (jalankan `scout:sync-index-settings`)
+- [x] Filter `featured=1` aktif di jalur Eloquent & Meilisearch
+
+#### SEO & Metadata
+- [x] `app/robots.ts` — crawler rules + URL sitemap
+- [x] `app/sitemap.ts` — fetch semua produk aktif (revalidate 1 jam) + halaman statis
+- [x] Product detail: OpenGraph, Twitter card, JSON-LD `schema.org/Product` (nama, harga, stok, rating aggregate)
+- [x] Root layout: keywords, Twitter card default
+
+#### Halaman Statis Marketing
+- [x] `/tentang` — cerita Greeva, misi sustainability, CTA mitra & toko
+- [x] `/mitra` — daftar mitra dengan link ke brand page masing-masing
+- [x] `/mitra/[slug]` (Notic & Reperca) — brand story, dampak, nilai, produk mitra
+- [x] `/kontak` — email layanan, kemitraan, media; kriteria mitra
+- [x] `/kebijakan-privasi` — data yang dikumpulkan, penggunaan, hak pengguna, cookie
+- [x] `/syarat-ketentuan` — pembelian, pengiriman, retur, larangan
+- [x] Navbar: link `/about` diubah ke `/tentang`; `generateMetadata` per halaman
+
+#### Laporan Admin (Export CSV)
+- [x] `ReportService` — 3 laporan: penjualan (orders), earning per mitra, rekap payout; rentang tanggal default 30 hari; uang dalam rupiah integer (Excel-ready)
+- [x] `Admin\ReportController` — streaming `streamDownload` + BOM UTF-8 (agar karakter Indonesia tampil benar di Excel)
+- [x] Endpoint `GET /admin/reports/{sales|earnings|payouts}`
+- [x] Halaman `/admin/reports` — date range picker + 3 kartu unduhan; tombol "Unduh CSV" via blob (Bearer token otomatis)
+- [x] Nav admin: "Laporan" ditambahkan
+
+### Step 21 — Sistem Voucher / Promo Code ✅
+
+- [x] **Tabel `vouchers`**: `code` (UPPERCASE unique), `type` (percent/fixed), `value`, `max_discount` (cap persen), `min_purchase`, `valid_from`/`valid_until`, `usage_limit` (kuota total), `per_user_limit`, `first_order_only` (khusus pelanggan baru), `is_active`; soft delete
+- [x] **Pemakaian dihitung dari tabel `orders`** (bukan counter denormalized) → kuota otomatis lepas saat order `cancelled`/`payment_failed`
+- [x] **Snapshot**: `voucher_id` + `voucher_code` tersimpan di order (immutable, konsisten dengan prinsip snapshot CLAUDE.md)
+- [x] **`VoucherService`**:
+  - `validate()` — abort 422 (Bahasa Indonesia) untuk: kode invalid/nonaktif, belum berlaku, kedaluwarsa, min. belanja kurang, kuota total habis, per-user limit, bukan pelanggan baru. Param `lock=true` untuk `lockForUpdate` saat di dalam transaksi checkout (cegah race condition kuota)
+  - `computeDiscount()` — persen + cap `max_discount`; nominal; selalu di-cap ≤ subtotal
+- [x] **`CheckoutService`** terintegrasi — validasi otoritatif voucher di dalam transaksi, `discount_total` dan `grand_total` dihitung ulang; `grand_total = subtotal + shipping - discount`
+- [x] **Admin CRUD** (`/admin/vouchers`) — buat/edit/hapus voucher; form: tipe, nilai, maks. potongan, min. belanja, tanggal berlaku, kuota total & per-user, toggle pelanggan baru & aktif; input uang dalam rupiah (dikonversi ke sen)
+- [x] **Buyer preview** — `POST /vouchers/preview` — validasi kode terhadap isi cart, kembalikan potongan (informatif; validasi otoritatif ulang saat submit checkout)
+- [x] **Checkout UI** — input "Kode Voucher" + tombol Terapkan, baris "Diskon" di ringkasan, total real-time; kode dikirim dalam payload checkout
+- [x] **Order detail** — `voucher_code` + `discount_total_formatted` ditampilkan
+- [x] **Nav admin**: "Voucher" ditambahkan
+- [x] **Tests**: `VoucherServiceTest` (12) + `VoucherTest` (5 — admin CRUD + guard) + `CheckoutServiceTest` (+2 — apply voucher & tolak voucher invalid dengan rollback stok)
+
 ### Backlog
 - [ ] _(lihat [IMPROVEMENTS.md](IMPROVEMENTS.md) untuk daftar peningkatan lanjutan)_
 
 ---
 
+## Fitur Utama
+
+| Area | Fitur |
+|------|-------|
+| **Buyer** | Browse & search produk, cart (guest + auth), checkout Midtrans Snap, ongkir otomatis, wishlist, order tracking, ulasan, pengajuan retur, voucher promo, notifikasi in-app |
+| **Partner** | Dashboard analitik, CRUD produk + varian, AI copywriter, riwayat stok, penjualan (tanpa PII buyer), pendapatan & riwayat payout |
+| **Admin** | KPI dashboard, kurasi produk (featured, bulk status), manajemen pesanan + refund, pengajuan retur (approve/reject), earning (reverse), payout batch, voucher CRUD, kategori, mitra, pengguna (suspend), laporan CSV, audit log |
+| **Platform** | Meilisearch full-text + filter, SEO (sitemap/robots/JSON-LD), WhatsApp notifikasi, halaman statis marketing, sistem voucher (persen/nominal + aturan lengkap) |
+
+---
+
 ## Tech Stack
 
-**Frontend:** Next.js 14 (App Router) · TypeScript · Tailwind CSS · Shadcn/ui · TanStack Query · Zustand
+**Frontend:** Next.js 14 (App Router) · TypeScript · Tailwind CSS · Shadcn/ui · Zustand
 
 **Backend:** Laravel 12 · PHP 8.3 · PostgreSQL 15 · Redis 7
 
-**Infra:** Cloudinary · Meilisearch · Midtrans · Fonnte/Wablas
+**Infra:** Cloudinary · Meilisearch · Midtrans · Fonnte (WhatsApp)
+
+**Tests:** 142 backend tests (Pest) · Vitest unit · Playwright E2E
 
 ---
 
